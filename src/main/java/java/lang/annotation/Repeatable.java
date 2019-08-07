@@ -36,6 +36,11 @@ package java.lang.annotation;
  * @jls 9.6 Annotation Types
  * @jls 9.7 Annotations
  */
+
+/**
+ * 该注解类型用于指示其声明（meta-）注解的注解类型是可重复的。
+ * { @Repeatable }的值表示可重复注解类型的包含注解类型。
+ */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
@@ -45,5 +50,6 @@ public @interface Repeatable {
      * repeatable annotation type.
      * @return the containing annotation type
      */
+    // 可重复注解
     Class<? extends Annotation> value();
 }

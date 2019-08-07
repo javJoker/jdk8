@@ -30,4 +30,8 @@
  * @author Josh Bloch
  * @since 1.5
  */
+
+/**
+ * 为Java编程语言注释工具提供库支持。
+ */
 package java.lang.annotation;
