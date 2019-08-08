@@ -206,7 +206,25 @@ package java.io;
  * 则可能发生这种情况。如果序列化流已被篡改，也可能发生这种情况;因此，尽管存在“恶意”或不完整的源流，
  * readObjectNoData仍可用于正确初始化反序列化对象。
  *
- * 127
+ * 序列化运行时将每个可序列化类与版本号相关联，称为serialVersionUID，
+ * 在反序列化期间使用该版本号来验证序列化对象的发送方和接收方是否已为该对象加载了与序列化兼容的类。
+ * 如果接收方具有加载了一个类，该类具有与相应发送者类不同的serialVersionUID，
+ * 然后反序列化将导致InvalidClassException。
+ * 可序列化类可以通过声明名为“serialVersionUID”的字段来显式声明其自己的serialVersionUID，
+ * 该字段必须是static，final和long类型
+ *
+ * 如果可序列化类未显式声明serialVersionUID，
+ * 则序列化运行时将基于类的各个方面计算该类的默认serialVersionUID值，
+ * 如Java（TM）对象序列化规范中所述。
+ * 但是，强烈建议所有可序列化类显式声明serialVersionUID值，
+ * 因为默认的serialVersionUID计算对类细节高度敏感，这些细节可能因编译器实现而异，
+ * 因此在反序列化期间可能导致意外的InvalidClassExceptions。
+ * 因此，为了保证跨不同java编译器实现的一致的serialVersionUID值，
+ * 可序列化类必须声明显式的serialVersionUID值。
+ * 强烈建议显式serialVersionUID声明尽可能使用private修饰符，
+ * 因为此类声明仅适用于立即声明的类 serialVersionUID字段作为继承成员无用。
+ * 数组类不能声明显式的serialVersionUID，因此它们始终具有默认的计算值，
+ * 但是对于数组类，不需要匹配serialVersionUID值。
  *
  */
 public interface Serializable {
