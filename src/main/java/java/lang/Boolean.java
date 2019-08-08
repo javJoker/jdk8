@@ -84,6 +84,9 @@ public final class Boolean implements java.io.Serializable,
      *
      * @param   value   the value of the {@code Boolean}.
      */
+    /**
+     * 静态工厂valueOf（boolean）通常是更好的选择。 它可能会产生明显更好的空间和时间性能
+     */
     public Boolean(boolean value) {
         this.value = value;
     }
@@ -209,6 +212,11 @@ public final class Boolean implements java.io.Serializable,
      * @return a hash code value for a {@code boolean} value.
      * @since 1.8
      */
+    /**
+     * 返回值：
+     * true: 1231
+     * false: 1237
+     */
     public static int hashCode(boolean value) {
         return value ? 1231 : 1237;
     }
@@ -301,6 +309,7 @@ public final class Boolean implements java.io.Serializable,
      * @see java.util.function.BinaryOperator
      * @since 1.8
      */
+    // 和
     public static boolean logicalAnd(boolean a, boolean b) {
         return a && b;
     }
@@ -315,6 +324,7 @@ public final class Boolean implements java.io.Serializable,
      * @see java.util.function.BinaryOperator
      * @since 1.8
      */
+    // 或
     public static boolean logicalOr(boolean a, boolean b) {
         return a || b;
     }
@@ -329,6 +339,7 @@ public final class Boolean implements java.io.Serializable,
      * @see java.util.function.BinaryOperator
      * @since 1.8
      */
+    // 异或
     public static boolean logicalXor(boolean a, boolean b) {
         return a ^ b;
     }
