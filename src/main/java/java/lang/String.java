@@ -609,6 +609,11 @@ public final class String
     * a separate constructor is needed because we already have a public
     * String(char[]) constructor that makes a copy of the given char[].
     */
+    /**
+     * 打包私有构造函数，它为速度共享值数组。
+     * 总是期望使用share == true来调用此构造函数。需要单独的构造函数，
+     * 因为我们已经有一个公共String（char []）构造函数，它可以复制给定的char []。
+     */
     String(char[] value, boolean share) {
         // assert share : "unshared not supported";
         this.value = value;

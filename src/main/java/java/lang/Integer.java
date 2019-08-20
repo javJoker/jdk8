@@ -49,6 +49,42 @@ import java.lang.annotation.Native;
  * @author  Joseph D. Darcy
  * @since JDK1.0
  */
+
+/**
+ * Integer的对象value属性定义了final类型（不变的），int是原始类型，
+ * int类型初始化的时候，范围在-128至127之间，如果不在此范围，会自动装箱成Integer类型，
+ * 即使值一样的但生成的内存是不一样的
+ *
+ *         System.out.println("int");
+ *         int i = 127;
+ *         System.out.println("值" + i);
+ *         System.out.println("内存地址：" + System.identityHashCode( i ));
+ *         int i2 = 127;
+ *         System.out.println("值" + i2);
+ *         System.out.println("内存地址：" + System.identityHashCode( i2 ));
+ *         i = 127;
+ *         System.out.println("值" + i);
+ *         System.out.println("内存地址：" + System.identityHashCode( i ));
+ *         i =128;
+ *         System.out.println("值" + i);
+ *         System.out.println("内存地址：" + System.identityHashCode( i ));
+ *         i2 = 128;
+ *         System.out.println("值" + i2);
+ *         System.out.println("内存地址：" + System.identityHashCode( i ));
+ *
+ * 结果：
+ *         int
+ *         值：127
+ *         内存地址：2133927002
+ *         值：127
+ *         内存地址：2133927002
+ *         值：127
+ *         内存地址：2133927002
+ *         值：128
+ *         内存地址：1836019240
+ *         值：128
+ *         内存地址：325040804
+ */
 public final class Integer extends Number implements Comparable<Integer> {
     /**
      * A constant holding the minimum value an {@code int} can
@@ -60,6 +96,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * A constant holding the maximum value an {@code int} can
      * have, 2<sup>31</sup>-1.
      */
+    // 最大数 2147483647
     @Native public static final int   MAX_VALUE = 0x7fffffff;
 
     /**
@@ -73,6 +110,9 @@ public final class Integer extends Number implements Comparable<Integer> {
 
     /**
      * All possible chars for representing a number as a String
+     */
+    /**
+     * 用于将数字表示为字符串的所有可能字符
      */
     final static char[] digits = {
         '0' , '1' , '2' , '3' , '4' , '5' ,
