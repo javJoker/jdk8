@@ -90,6 +90,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * A constant holding the minimum value an {@code int} can
      * have, -2<sup>31</sup>.
      */
+    // 最小值 -2147483648
     @Native public static final int   MIN_VALUE = 0x80000000;
 
     /**
@@ -167,6 +168,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @see     java.lang.Character#MAX_RADIX
      * @see     java.lang.Character#MIN_RADIX
      */
+    // 转化为相应进制的字符串
     public static String toString(int i, int radix) {
         if (radix < Character.MIN_RADIX || radix > Character.MAX_RADIX)
             radix = 10;
@@ -180,6 +182,7 @@ public final class Integer extends Number implements Comparable<Integer> {
         boolean negative = (i < 0);
         int charPos = 32;
 
+        // 非负数的时候，转化为负数
         if (!negative) {
             i = -i;
         }
@@ -307,6 +310,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @see #toUnsignedString(int, int)
      * @since   JDK1.0.2
      */
+    // 八进制 0XXXX或者\0
     public static String toOctalString(int i) {
         return toUnsignedString0(i, 3);
     }
@@ -339,6 +343,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @see #toUnsignedString(int, int)
      * @since   JDK1.0.2
      */
+    // 二进制
     public static String toBinaryString(int i) {
         return toUnsignedString0(i, 1);
     }
@@ -379,6 +384,7 @@ public final class Integer extends Number implements Comparable<Integer> {
         return charPos;
     }
 
+    // 十位
     final static char [] DigitTens = {
         '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
         '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
@@ -392,6 +398,7 @@ public final class Integer extends Number implements Comparable<Integer> {
         '9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
         } ;
 
+     // 个位
     final static char [] DigitOnes = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -434,6 +441,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @param   i   an integer to be converted.
      * @return  a string representation of the argument in base&nbsp;10.
      */
+    // 转化为字符串
     public static String toString(int i) {
         if (i == Integer.MIN_VALUE)
             return "-2147483648";
@@ -470,11 +478,13 @@ public final class Integer extends Number implements Comparable<Integer> {
      *
      * Will fail if i == Integer.MIN_VALUE
      */
+    // 获取字符
     static void getChars(int i, int index, char[] buf) {
         int q, r;
         int charPos = index;
         char sign = 0;
 
+        // 符号标记和转化为非负数
         if (i < 0) {
             sign = '-';
             i = -i;
@@ -569,6 +579,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @exception  NumberFormatException if the {@code String}
      *             does not contain a parsable {@code int}.
      */
+    // 由指定的基数中的字符串参数表示的整数。
     public static int parseInt(String s, int radix)
                 throws NumberFormatException
     {
@@ -816,7 +827,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * may be set and saved in the private system properties in the
      * sun.misc.VM class.
      */
-
+    // 缓存
     private static class IntegerCache {
         static final int low = -128;
         static final int high;
@@ -877,6 +888,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *
      * @serial
      */
+    // final
     private final int value;
 
     /**
@@ -1192,6 +1204,8 @@ public final class Integer extends Number implements Comparable<Integer> {
      *            contain a parsable integer.
      * @see java.lang.Integer#parseInt(java.lang.String, int)
      */
+    // 八进制 ： 0
+    // 十六进制： 0x #
     public static Integer decode(String nm) throws NumberFormatException {
         int radix = 10;
         int index = 0;
@@ -1432,6 +1446,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *     is equal to zero.
      * @since 1.5
      */
+    // 返回指定{@code int}值的二进制补码二进制表示中最高位（“最左侧”）一位之前的零位数。
     public static int numberOfLeadingZeros(int i) {
         // HD, Figure 5-6
         if (i == 0)
