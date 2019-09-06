@@ -52,6 +52,7 @@ public final class Double extends Number implements Comparable<Double> {
      * {@code double}. It is equal to the value returned by
      * {@code Double.longBitsToDouble(0x7ff0000000000000L)}.
      */
+    // 正无穷
     public static final double POSITIVE_INFINITY = 1.0 / 0.0;
 
     /**
@@ -59,6 +60,7 @@ public final class Double extends Number implements Comparable<Double> {
      * {@code double}. It is equal to the value returned by
      * {@code Double.longBitsToDouble(0xfff0000000000000L)}.
      */
+    // 负无穷
     public static final double NEGATIVE_INFINITY = -1.0 / 0.0;
 
     /**
@@ -75,6 +77,10 @@ public final class Double extends Number implements Comparable<Double> {
      * the hexadecimal floating-point literal
      * {@code 0x1.fffffffffffffP+1023} and also equal to
      * {@code Double.longBitsToDouble(0x7fefffffffffffffL)}.
+     */
+    /**
+     * 十六进制
+     * 与e是有效的十六进制数字有关，因此保持它将导致解析模糊；将e更改为p时，解决了模糊性
      */
     public static final double MAX_VALUE = 0x1.fffffffffffffP+1023; // 1.7976931348623157e+308
 
@@ -104,6 +110,7 @@ public final class Double extends Number implements Comparable<Double> {
      *
      * @since 1.6
      */
+    // 最大指数
     public static final int MAX_EXPONENT = 1023;
 
     /**
@@ -113,6 +120,7 @@ public final class Double extends Number implements Comparable<Double> {
      *
      * @since 1.6
      */
+    // 最小指数
     public static final int MIN_EXPONENT = -1022;
 
     /**
@@ -200,6 +208,9 @@ public final class Double extends Number implements Comparable<Double> {
      * @param   d   the {@code double} to be converted.
      * @return a string representation of the argument.
      */
+    /**
+     * 在10<sup>-3</sup> 到 10<sup>7</sup>之间，使用十进制计数，否则用科学计数法
+     */
     public static String toString(double d) {
         return FloatingDecimal.toJavaFormatString(d);
     }
@@ -278,14 +289,17 @@ public final class Double extends Number implements Comparable<Double> {
      * @since 1.5
      * @author Joseph D. Darcy
      */
+    // 有很多不懂 ？？？？
     public static String toHexString(double d) {
         /*
          * Modeled after the "a" conversion specifier in C99, section
          * 7.19.6.1; however, the output of this method is more
          * tightly specified.
          */
+        // 无穷大
         if (!isFinite(d) )
             // For infinity and NaN, use the decimal output.
+            // 对于无穷大和NaN，请使用小数输出。
             return Double.toString(d);
         else {
             // Initialized to maximum size of output.
@@ -296,6 +310,7 @@ public final class Double extends Number implements Comparable<Double> {
 
             answer.append("0x");
 
+            // 转化为正数
             d = Math.abs(d);
 
             if(d == 0.0) {
@@ -312,12 +327,19 @@ public final class Double extends Number implements Comparable<Double> {
 
                 // Subnormal values have a 0 implicit bit; normal
                 // values have a 1 implicit bit.
+                // ??
                 answer.append(subnormal ? "0." : "1.");
 
                 // Isolate the low-order 13 digits of the hex
                 // representation.  If all the digits are zero,
                 // replace with a single 0; otherwise, remove all
                 // trailing zeros.
+                /**
+                 * ???
+                 * 隔离十六进制表示的低位13位数。
+                 * 如果所有数字都为零，则替换为单个0;
+                 * 否则，删除所有尾随零。
+                 */
                 String signif = Long.toHexString(signifBits).substring(3,16);
                 answer.append(signif.equals("0000000000000") ? // 13 zeros
                               "0":
@@ -498,6 +520,15 @@ public final class Double extends Number implements Comparable<Double> {
      * @throws     NumberFormatException  if the string does not contain a
      *             parsable number.
      */
+    /**
+     * 1.参数s为null的时候，会跑出异常NullPointerException
+     * 2.大于或等于{@link #MAX_VALUE} + {@link Math＃ulp（double）ulp（MAX_VALUE）} / 2），
+     * 则舍入为{ @code double}将导致无穷大，
+     * 3.小于或等于{@link #MIN_VALUE} / 2，则舍入为float将导致零
+     * 4.double值的ulp是该浮点值与下一个数值较大double值之间的正距离。
+     * 5.要解释浮点值的本地化字符串表示形式，请使用{@link java.text.NumberFormat}的子类。
+     *
+     */
     public static Double valueOf(String s) throws NumberFormatException {
         return new Double(parseDouble(s));
     }
@@ -514,6 +545,12 @@ public final class Double extends Number implements Comparable<Double> {
      * @param  d a double value.
      * @return a {@code Double} instance representing {@code d}.
      * @since  1.5
+     */
+    /**
+     * ?????
+     * 如果不需要新的{@code Double}实例，通常应优先使用此方法，
+     * 而不是构造函数{@link #Double（double）}，
+     * 因为此方法可能通过频繁缓存产生明显更好的空间和时间性能要求的价值。
      */
     public static Double valueOf(double d) {
         return new Double(d);
@@ -572,6 +609,7 @@ public final class Double extends Number implements Comparable<Double> {
      * floating-point value, {@code false} otherwise.
      * @since 1.8
      */
+    // 判断是否为有限浮点数
     public static boolean isFinite(double d) {
         return Math.abs(d) <= DoubleConsts.MAX_VALUE;
     }
@@ -832,10 +870,32 @@ public final class Double extends Number implements Comparable<Double> {
      * @param   value   a {@code double} precision floating-point number.
      * @return the bits that represent the floating-point number.
      */
+    /**
+     * double：
+     * 1bit（符号位） 11bits（指数位） 52bits（尾数位）
+     *
+     * 根据IEEE 754浮点“双格式”位布局返回指定浮点值的表示形式。
+     *
+     * 位63（由掩码{@code 0x8000000000000000L}选择的位）表示浮点数的符号。
+     * 位62-52（由掩码{@code 0x7ff0000000000000L}选择的位）表示指数。
+     * 位51-0（由掩码{@code 0x000fffffffffffffL}选择的位）表示浮点数的有效数（有时称为尾数）。
+     *
+     * 如果参数为正无穷大，则结果为{@code 0x7ff0000000000000L}。
+     *
+     * 如果参数为负无穷大，则结果为{@code 0xfff0000000000000L}。
+     *
+     * 如果参数为NaN，则结果为{@code 0x7ff8000000000000L}。
+     *
+     * 在所有情况下，结果都是{@code long}整数，当赋予{@link #longBitsToDouble（long）}方法时，
+     * 将产生与{@code doubleToLongBits}的参数相同的浮点值（ 除了所有NaN值都折叠为单个“规范”NaN值）。
+     *
+     */
     public static long doubleToLongBits(double value) {
         long result = doubleToRawLongBits(value);
         // Check for NaN based on values of bit fields, maximum
         // exponent and nonzero significand.
+        // 根据位字段，最大指数和非零有效数的值检查NaN。
+        // ?? 常量值的意义
         if ( ((result & DoubleConsts.EXP_BIT_MASK) ==
               DoubleConsts.EXP_BIT_MASK) &&
              (result & DoubleConsts.SIGNIF_BIT_MASK) != 0L)
@@ -879,6 +939,7 @@ public final class Double extends Number implements Comparable<Double> {
      * @return the bits that represent the floating-point number.
      * @since 1.3
      */
+    // ??
     public static native long doubleToRawLongBits(double value);
 
     /**

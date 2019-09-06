@@ -1762,6 +1762,7 @@ public final class Math {
      * and the sign of {@code sign}.
      * @since 1.6
      */
+    // ??
     public static double copySign(double magnitude, double sign) {
         return Double.longBitsToDouble((Double.doubleToRawLongBits(sign) &
                                         (DoubleConsts.SIGN_BIT_MASK)) |
@@ -1807,12 +1808,14 @@ public final class Math {
      * @return the unbiased exponent of the argument
      * @since 1.6
      */
+    // 获取指数
     public static int getExponent(float f) {
         /*
          * Bitwise convert f to integer, mask out exponent bits, shift
          * to the right and then subtract out float's bias adjust to
          * get true exponent value
          */
+        // 按位将f转换为整数，屏蔽指数位，向右移位然后减去浮点偏移调整以获得真指数值
         return ((Float.floatToRawIntBits(f) & FloatConsts.EXP_BIT_MASK) >>
                 (FloatConsts.SIGNIFICAND_WIDTH - 1)) - FloatConsts.EXP_BIAS;
     }
@@ -1831,6 +1834,7 @@ public final class Math {
      * @return the unbiased exponent of the argument
      * @since 1.6
      */
+    // 获取指数
     public static int getExponent(double d) {
         /*
          * Bitwise convert d to long, mask out exponent bits, shift
