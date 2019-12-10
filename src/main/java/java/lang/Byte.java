@@ -74,6 +74,7 @@ public final class Byte extends Number implements Comparable<Byte> {
         return Integer.toString((int)b, 10);
     }
 
+    // 缓存
     private static class ByteCache {
         private ByteCache(){}
 

@@ -33,6 +33,11 @@ package java.lang;
  * @author  unascribed
  * @since   JDK1.0
  */
+
+/**
+ * 当某个类定义发生不兼容的类更改时抛出。
+ * 此后，当前执行的方法所依赖的某些类的定义已更改。
+ */
 public
 class IncompatibleClassChangeError extends LinkageError {
     private static final long serialVersionUID = -4914975503642802119L;

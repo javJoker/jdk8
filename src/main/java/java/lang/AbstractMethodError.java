@@ -35,6 +35,11 @@ package java.lang;
  * @author  unascribed
  * @since   JDK1.0
  */
+/**
+ * 当应用程序尝试调用抽象方法时抛出。
+ * 通常，此错误由编译器捕获；
+ * 如果自上次编译当前执行的方法以来某个类的定义发生了不兼容的更改，则仅在运行时会发生此错误。
+ */
 public
 class AbstractMethodError extends IncompatibleClassChangeError {
     private static final long serialVersionUID = -1654391082989018462L;

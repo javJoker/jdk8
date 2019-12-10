@@ -115,6 +115,7 @@ public enum RoundingMode {
          *<tr align=right><td>-5.5</td> <td>-6</td>
          *</table>
          */
+        // 向上取整
     UP(BigDecimal.ROUND_UP),
 
         /**
@@ -139,6 +140,7 @@ public enum RoundingMode {
          *<tr align=right><td>-5.5</td> <td>-5</td>
          *</table>
          */
+        // 向下取整
     DOWN(BigDecimal.ROUND_DOWN),
 
         /**
@@ -164,6 +166,10 @@ public enum RoundingMode {
          *<tr align=right><td>-5.5</td> <td>-5</td>
          *</table>
          */
+        // 舍入模式向正无穷大舍入。如果结果为正数，则行为与{@code RoundingMode.UP}相同；
+        // 如果为负，则与{@code RoundingMode.DOWN}
+        //
+        // 正数向上取整，负数向下取整
     CEILING(BigDecimal.ROUND_CEILING),
 
         /**
@@ -189,6 +195,10 @@ public enum RoundingMode {
          *<tr align=right><td>-5.5</td> <td>-6</td>
          *</table>
          */
+        // 舍入模式向负无穷大舍入。如果结果为正数，则行为与{@code RoundingMode.DOWN}相同；
+        // 如果为负，则与{@code RoundingMode.UP}一样
+        //
+        // 正数向下取整，负数向上取整
     FLOOR(BigDecimal.ROUND_FLOOR),
 
         /**
@@ -214,11 +224,19 @@ public enum RoundingMode {
          *<tr align=right><td>-1.6</td> <td>-2</td>
          *<tr align=right><td>-2.5</td> <td>-3</td>
          *<tr align=right><td>-5.5</td> <td>-6</td>
+         *
+         *
+         *
          *</table>
          */
+        // 四舍五入
+        // 如果丢弃的分数≥0.5，则行为与{@code RoundingMode.UP}相同；
+        // 否则，其行为与{@code RoundingMode.DOWN}相同。
     HALF_UP(BigDecimal.ROUND_HALF_UP),
 
         /**
+         *
+         *
          * Rounding mode to round towards {@literal "nearest neighbor"}
          * unless both neighbors are equidistant, in which case round
          * down.  Behaves as for {@code RoundingMode.UP} if the discarded
@@ -299,9 +317,12 @@ public enum RoundingMode {
          *<tr align=right><td>-5.5</td> <td>throw {@code ArithmeticException}</td>
          *</table>
          */
+        // 舍入模式可以断言所请求的操作具有精确的结果，因此不需要舍入。
+        // 如果在产生不精确结果的操作上指定了这种舍入模式，则会抛出{@code ArithmeticException}
     UNNECESSARY(BigDecimal.ROUND_UNNECESSARY);
 
     // Corresponding BigDecimal rounding constant
+    // 对应的BigDecimal舍入常数
     final int oldMode;
 
     /**
@@ -322,6 +343,7 @@ public enum RoundingMode {
      * @return {@code RoundingMode} corresponding to the given integer.
      * @throws IllegalArgumentException integer is out of range
      */
+    // 返回与{@link BigDecimal}中的传统整数舍入模式常量相对应的{@code RoundingMode}对象。
     public static RoundingMode valueOf(int rm) {
         switch(rm) {
 

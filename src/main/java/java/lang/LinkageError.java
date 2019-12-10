@@ -34,6 +34,11 @@ package java.lang;
  * @author  Frank Yellin
  * @since   JDK1.0
  */
+
+/**
+ * {@code LinkageError}的子类表明一个类对另一个类具有一定的依赖性。
+ * 但是，后一类在前一类编译之后发生了不兼容的变化。
+ */
 public
 class LinkageError extends Error {
     private static final long serialVersionUID = 3579600108157160122L;

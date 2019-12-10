@@ -217,6 +217,10 @@ import static java.math.BigInteger.LONG_MASK;
  * @author  Joseph D. Darcy
  * @author  Sergey V. Kuksenko
  */
+
+/**
+ * 1. 如果没有精度枚举，无穷数会跑出异常，
+ */
 public class BigDecimal extends Number implements Comparable<BigDecimal> {
     /**
      * The unscaled value of this BigDecimal, as returned by {@link
@@ -225,6 +229,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * @serial
      * @see #unscaledValue
      */
+    // 未缩放值
     private final BigInteger intVal;
 
     /**
@@ -233,6 +238,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * @serial
      * @see #scale
      */
+    // 小数位
     private final int scale;  // Note: this may have any value, so
                               // calculations must be done in longs
 
@@ -256,6 +262,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * Sentinel value for {@link #intCompact} indicating the
      * significand information is only available from {@code intVal}.
      */
+    // 前哨值
     static final long INFLATED = Long.MIN_VALUE;
 
     private static final BigInteger INFLATED_BIGINT = BigInteger.valueOf(INFLATED);
@@ -614,6 +621,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
     /*
      * parse exponent
      */
+    // 解析科学计数法值
     private static long parseExp(char[] in, int offset, int len){
         long exp = 0;
         offset++;
@@ -1193,6 +1201,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * @return a {@code BigDecimal} whose value is
      *         <tt>(unscaledVal &times; 10<sup>-scale</sup>)</tt>.
      */
+//    ------
     public static BigDecimal valueOf(long unscaledVal, int scale) {
         if (scale == 0)
             return valueOf(unscaledVal);
@@ -3776,6 +3785,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * @param x the {@code long}
      * @return the length of the unscaled value, in deciaml digits.
      */
+    // 绝对值
     static int longDigitLength(long x) {
         /*
          * As described in "Bit Twiddling Hacks" by Sean Anderson,
