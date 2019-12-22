@@ -505,6 +505,10 @@ public final class System {
      * @return  the hashCode
      * @since   JDK1.1
      */
+    /**
+     * 返回hashCode(为内存地址),空引用的哈希码为零。
+     *
+     */
     public static native int identityHashCode(Object x);
 
     /**

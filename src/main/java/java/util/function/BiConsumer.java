@@ -41,6 +41,7 @@ import java.util.Objects;
  * @see Consumer
  * @since 1.8
  */
+// 表示一个接受两个输入参数并且不返回结果的操作
 @FunctionalInterface
 public interface BiConsumer<T, U> {
 
@@ -64,6 +65,7 @@ public interface BiConsumer<T, U> {
      * operation followed by the {@code after} operation
      * @throws NullPointerException if {@code after} is null
      */
+    // 返回一个组合的{@code BiConsumer}，依次执行此操作，然后执行{@code after}操作
     default BiConsumer<T, U> andThen(BiConsumer<? super T, ? super U> after) {
         Objects.requireNonNull(after);
 

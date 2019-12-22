@@ -55,13 +55,13 @@ import java.io.Serializable;
  * well defined on such a map.
  *
  * <p>All general-purpose map implementation classes should provide two
- * "standard" constructors: a void (no arguments) constructor which creates an
- * empty map, and a constructor with a single argument of type <tt>Map</tt>,
- * which creates a new map with the same key-value mappings as its argument.
- * In effect, the latter constructor allows the user to copy any map,
- * producing an equivalent map of the desired class.  There is no way to
- * enforce this recommendation (as interfaces cannot contain constructors) but
- * all of the general-purpose map implementations in the JDK comply.
+ *  * "standard" constructors: a void (no arguments) constructor which creates an
+ *  * empty map, and a constructor with a single argument of type <tt>Map</tt>,
+ *  * which creates a new map with the same key-value mappings as its argument.
+ *  * In effect, the latter constructor allows the user to copy any map,
+ *  * producing an equivalent map of the desired class.  There is no way to
+ *  * enforce this recommendation (as interfaces cannot contain constructors) but
+ *  * all of the general-purpose map implementations in the JDK comply.
  *
  * <p>The "destructive" methods contained in this interface, that is, the
  * methods that modify the map on which they operate, are specified to throw
@@ -615,6 +615,7 @@ public interface Map<K,V> {
      * removed during iteration
      * @since 1.8
      */
+    //
     default void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action);
         for (Map.Entry<K, V> entry : entrySet()) {
@@ -670,6 +671,7 @@ public interface Map<K,V> {
      * removed during iteration
      * @since 1.8
      */
+    //
     default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         Objects.requireNonNull(function);
         for (Map.Entry<K, V> entry : entrySet()) {
@@ -738,6 +740,10 @@ public interface Map<K,V> {
      *         (<a href="{@docRoot}/java/util/Collection.html#optional-restrictions">optional</a>)
      * @since 1.8
      */
+    /**
+     * 1.非线程安全
+     * 2.如果map中key对应的有值，就放回存取的值，如果为空，存取新值并返回。也就是说map中无对应的key就进行插入
+     */
     default V putIfAbsent(K key, V value) {
         V v = get(key);
         if (v == null) {
@@ -781,6 +787,7 @@ public interface Map<K,V> {
      *         (<a href="{@docRoot}/java/util/Collection.html#optional-restrictions">optional</a>)
      * @since 1.8
      */
+    // 非线程安全
     default boolean remove(Object key, Object value) {
         Object curValue = get(key);
         if (!Objects.equals(curValue, value) ||
@@ -833,6 +840,7 @@ public interface Map<K,V> {
      *         or value prevents it from being stored in this map
      * @since 1.8
      */
+    // key和传输的oldValue相等的时候才替换返回boolean类型
     default boolean replace(K key, V oldValue, V newValue) {
         Object curValue = get(key);
         if (!Objects.equals(curValue, oldValue) ||
@@ -881,6 +889,7 @@ public interface Map<K,V> {
      *         or value prevents it from being stored in this map
      * @since 1.8
      */
+    // 替换
     default V replace(K key, V value) {
         V curValue;
         if (((curValue = get(key)) != null) || containsKey(key)) {
@@ -948,6 +957,7 @@ public interface Map<K,V> {
      *         (<a href="{@docRoot}/java/util/Collection.html#optional-restrictions">optional</a>)
      * @since 1.8
      */
+    // key对应newValue不为空添加新值并返回
     default V computeIfAbsent(K key,
             Function<? super K, ? extends V> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
@@ -1008,6 +1018,10 @@ public interface Map<K,V> {
      *         prevents it from being stored in this map
      *         (<a href="{@docRoot}/java/util/Collection.html#optional-restrictions">optional</a>)
      * @since 1.8
+     */
+    /**
+     * 如果指定键的值存在且非空，则尝试*给定键及其当前映射值，计算新映射。
+     * 如果函数返回{@code null}，则映射将被删除。
      */
     default V computeIfPresent(K key,
             BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
@@ -1085,6 +1099,10 @@ public interface Map<K,V> {
      *         (<a href="{@docRoot}/java/util/Collection.html#optional-restrictions">optional</a>)
      * @since 1.8
      */
+    /**
+     * newValue为空，移除map中key存在的oldValue，
+     * newValue不为空put进去
+     */
     default V compute(K key,
             BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
@@ -1093,6 +1111,11 @@ public interface Map<K,V> {
         V newValue = remappingFunction.apply(key, oldValue);
         if (newValue == null) {
             // delete mapping
+            /**
+             * 这里为什么判断了oldValue != null，还要判断containsKey(key)呢？
+             * 考虑的全面，因为map的子类中有的key、value可以为null的类型，
+             * oldValue == null 为true的时候，也有可能key存在，但oldValue为null的情况
+             */
             if (oldValue != null || containsKey(key)) {
                 // something to remove
                 remove(key);
@@ -1166,6 +1189,7 @@ public interface Map<K,V> {
      *         null
      * @since 1.8
      */
+    // oldValue为null，设置为传过来的value值
     default V merge(K key, V value,
             BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
