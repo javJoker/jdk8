@@ -707,7 +707,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *       注意treeifyBin此方法中table的length小于64（MIN_TREEIFY_CAPACITY）的时候只是进行了resize()，没有进行树化，
      *       当大于等于64的时候才把node节点转化为TreeNode === 》TreeNode<K,V> p = replacementTreeNode(e, null)，再进行treeify树化
      * （3）e不为空的时候，说明有key相等的节点，覆盖旧值并返回
-     * 3.e为空的时候，说明没有相等的节点，modCount、size自增，并判断size > threshold为true就resize()大小，并返回为null
+     * 3.e为空的时候，说明没有相等的节点，就是把这个key、value当做新增到map中去，modCount、size自增，并判断size > threshold为true就resize()大小，并返回为null
      */
     // put实现
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
@@ -782,7 +782,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * 初始化或者重置大小
      *
-     * 经过rehash之后，元素的位置要么是在原位置，要么是在原位置再移动2次幂的位置
+     * 经过resize之后，元素的位置要么是在原位置，要么是在原位置再移动2次幂的位置
      * 扩容计算逻辑：扩容的容量是原来的2倍，也就是左移一位增加一位数（二进制的时候），扩容之后就是在
      * 原来的基础上多一位数，新添加的这位数判断是0还是1就可以决定在新数组上面的位置了，0表示原位置，
      * 1表示在原来的位置上加上一个原来数组的长度（原索引+oldCap）

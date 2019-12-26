@@ -35,10 +35,10 @@ import java.io.InvalidObjectException;
  * element.
  *
  * <p>This class offers constant time performance for the basic operations
- * (<tt>add</tt>, <tt>remove</tt>, <tt>contains</tt> and <tt>size</tt>),
- * assuming the hash function disperses the elements properly among the
+ * (<tt>add</tt>, <tt>remove</tt>, <tts the elements properly among the
  * buckets.  Iterating over this set requires time proportional to the sum of
- * the <tt>HashSet</tt> instance's size (the number of elements) plus the
+ * the <tt>HashSet</tt> instance's >contains</tt> and <tt>size</tt>),
+ *  * assuming the hash function dispersesize (the number of elements) plus the
  * "capacity" of the backing <tt>HashMap</tt> instance (the number of
  * buckets).  Thus, it's very important not to set the initial capacity too
  * high (or the load factor too low) if iteration performance is important.
@@ -85,7 +85,14 @@ import java.io.InvalidObjectException;
  * @see     HashMap
  * @since   1.2
  */
-
+/**
+ *
+ * 1.无序的，不安全
+ * 2.如果迭代性能很重要，则不要将初始容量设置得过高（或负载因数过低），这一点非常重要。
+ * 3.快速失败机制
+ * 4.元素可以为null
+ *
+ */
 public class HashSet<E>
     extends AbstractSet<E>
     implements Set<E>, Cloneable, java.io.Serializable
