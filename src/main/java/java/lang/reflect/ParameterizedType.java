@@ -44,6 +44,24 @@ package java.lang.reflect;
  *
  * @since 1.5
  */
+/**
+ * ParameterizedType表示参数化类型，这个类可以用来检验泛型是否被参数化。
+ * 具有<>（泛型）符号的变量是参数化类型。
+ *
+ * ParameterizedType是在反射方法第一次需要时创建的，如包中指定的。
+ * 当创建参数化类型p时，解析p实例化的泛型类型声明，并且递归地创建p的所有类型参数。
+ * 重复创建参数化类型无效。
+ *
+ * 实现此接口的类的实例必须实现一个equals（）方法，该方法使共享相同泛型类型声明并具有相同类型参数的任何两个实例相等。
+ *
+ * 可以看这篇博客介绍：https://www.jianshu.com/p/27772c32fa41
+ * 1.Type 是Java编程语言中所有类型的通用超级接口。这些类型包括原始类型、参数化类型、数组类型、类型变量和基元类型。
+ *    内部的 getTypeName() 方法会返回对应类型的全限定类名。
+ * 2.只有具有<>（泛型）符号的变量是参数化类型。
+ * 3.getActualTypeArguments()返回了一个Type数组,数组里是参数化类型的参数，可以根据这个方法获取到 “泛型的类型”。
+ * 4.getRawType()是获取变量的类型。
+ * 5.getOwnerType()方法对于O<T>.I<S>类型的变量,会返回O<T>，例如：Map.Entry<Long,Short> mapLong，会返回java.util.Map，而不是java.util.Entry。
+ */
 public interface ParameterizedType extends Type {
     /**
      * Returns an array of {@code Type} objects representing the actual type
@@ -56,11 +74,14 @@ public interface ParameterizedType extends Type {
      * @return an array of {@code Type} objects representing the actual type
      *     arguments to this type
      * @throws TypeNotPresentException if any of the
-     *     actual type arguments refers to a non-existent type declaration
+     *     actual type arguments refers to a non-existent type declaration   // 如果任何实际类型参数引用了不存在的类型声明
      * @throws MalformedParameterizedTypeException if any of the
      *     actual type parameters refer to a parameterized type that cannot
-     *     be instantiated for any reason
+     *     be instantiated for any reason  // 如果任何实际类型参数引用由于某种原因而无法实例化的参数化类型
      * @since 1.5
+     */
+    /**
+     * 返回了一个Type数组,数组里是参数化类型的参数。
      */
     Type[] getActualTypeArguments();
 
@@ -71,6 +92,9 @@ public interface ParameterizedType extends Type {
      * @return the {@code Type} object representing the class or interface
      *     that declared this type
      * @since 1.5
+     */
+    /**
+     * 返回类或接口的{@code Type}对象的类型
      */
     Type getRawType();
 
@@ -90,6 +114,12 @@ public interface ParameterizedType extends Type {
      *     refers to a parameterized type that cannot be instantiated
      *     for any reason
      * @since 1.5
+     */
+    /**
+     * 返回@code type对象，该对象表示此类型所属的类型。
+     * 例如，O<T>.I<S>类型的变量,调用getOwnerType()会返回O<T>.
+     *
+     * 如果此类型是顶级类型，则返回@code null。
      */
     Type getOwnerType();
 }

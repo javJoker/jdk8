@@ -490,6 +490,10 @@ public interface Spliterator<T> {
      * encountered elements {@code x, y}, {@code !x.equals(y)}. This
      * applies for example, to a Spliterator based on a {@link Set}.
      */
+    /**
+     * 特征值表示对于每对遇到的元素{@code x，y}，{@code！x.equals（y）}。
+     * 例如适用于基于{@link Set}的分隔器。 ??
+     */
     public static final int DISTINCT   = 0x00000001;
 
     /**
@@ -524,6 +528,10 @@ public interface Spliterator<T> {
      * Characteristic value signifying that the source guarantees that
      * encountered elements will not be {@code null}. (This applies,
      * for example, to most concurrent collections, queues, and maps.)
+     */
+    /**
+     * 表示源保证遇到的元素不会为{@code null}的特征值。
+     * （例如，适用于大多数并发集合，队列和映射。） ???
      */
     public static final int NONNULL    = 0x00000100;
 

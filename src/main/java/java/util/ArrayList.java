@@ -116,6 +116,9 @@ public class ArrayList<E> extends AbstractList<E>
     /**
      * Shared empty array instance used for empty instances.
      */
+    /**
+     * 用于空实例的共享空数组实例
+     */
     private static final Object[] EMPTY_ELEMENTDATA = {};
 
     /**
@@ -138,6 +141,9 @@ public class ArrayList<E> extends AbstractList<E>
      *
      * @serial
      */
+    /**
+     *  ArrayList的大小（它包含的元素数）
+     */
     private int size;
 
     /**
@@ -146,6 +152,10 @@ public class ArrayList<E> extends AbstractList<E>
      * @param  initialCapacity  the initial capacity of the list
      * @throws IllegalArgumentException if the specified initial capacity
      *         is negative
+     */
+    /**
+     * 初始化的时候只是初始化了对象数组，没有初始化size大小。
+     * set()方法插入元素的时候，会进行校验就会抛出异常
      */
     public ArrayList(int initialCapacity) {
         if (initialCapacity > 0) {
@@ -441,6 +451,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E set(int index, E element) {
+        // 下标检查
         rangeCheck(index);
 
         E oldValue = elementData(index);
@@ -647,6 +658,11 @@ public class ArrayList<E> extends AbstractList<E>
      * runtime exception.  This method does *not* check if the index is
      * negative: It is always used immediately prior to an array access,
      * which throws an ArrayIndexOutOfBoundsException if index is negative.
+     */
+    /**
+     * 检查给定的索引是否在范围内。如果不是，则抛出适当的运行时异常。
+     * 此方法不检查索引是否为负数：始终在访问数组之前立即使用它，
+     * 如果索引为负数，则抛出ArrayIndexOutOfBoundsException。
      */
     private void rangeCheck(int index) {
         if (index >= size)

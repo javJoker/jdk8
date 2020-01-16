@@ -39,21 +39,32 @@ import sun.reflect.misc.ReflectUtil;
  * @see ObjectStreamClass
  * @since 1.2
  */
+/**
+ * Serializable类中对Serializable字段的描述。
+ * ObjectStreamFields的数组用于声明类的Serializable字段
+ */
 public class ObjectStreamField
     implements Comparable<Object>
 {
 
+
     /** field name */
+    // 字段名
     private final String name;
     /** canonical JVM signature of field type */
+    // 字段类型的标准JVM签名
     private final String signature;
     /** field type (Object.class if unknown non-primitive type) */
+    // 字段类型
     private final Class<?> type;
     /** whether or not to (de)serialize field values as unshared */
+    // 是否将字段值(反)序列化为非共享
     private final boolean unshared;
     /** corresponding reflective field object, if any */
+    // 相应的反射字段对象（如果有）
     private final Field field;
     /** offset of field value in enclosing field group */
+    // 封闭字段组中字段值的偏移量 ???
     private int offset = 0;
 
     /**
@@ -63,6 +74,7 @@ public class ObjectStreamField
      * @param   name the name of the serializable field
      * @param   type the <code>Class</code> object of the serializable field
      */
+    //
     public ObjectStreamField(String name, Class<?> type) {
         this(name, type, false);
     }
@@ -84,6 +96,18 @@ public class ObjectStreamField
      *          manner as writeUnshared/readUnshared
      * @since   1.4
      */
+    /**
+     * 创建一个ObjectStreamField，它表示具有给定名称和类型的可序列化字段。
+     * 如果unshared为false，则以默认方式对表示的字段的值进行序列化和反序列化-如果字段是非原始的，
+     * 对象值被序列化和反序列化，就好像它们是通过调用writeObject和readObject进行写入和读取一样。。
+     * 如果unshared为true，则对表示的字段的值进行序列化和反序列化，
+     * 就好像它们是通过对writeUnshared和readUnshared的调用来写入和读取的。
+     *
+     * @param name 不能为null
+     * @param type
+     * @param unshared false，共享写入/读取字段值；如果为true，不共享写入/读取
+     */
+    //
     public ObjectStreamField(String name, Class<?> type, boolean unshared) {
         if (name == null) {
             throw new NullPointerException();
@@ -91,6 +115,7 @@ public class ObjectStreamField
         this.name = name;
         this.type = type;
         this.unshared = unshared;
+        //
         signature = getClassSignature(type).intern();
         field = null;
     }
@@ -290,12 +315,15 @@ public class ObjectStreamField
     /**
      * Returns JVM type signature for given class.
      */
+    // 返回jvm类型签名
     private static String getClassSignature(Class<?> cl) {
         StringBuilder sbuf = new StringBuilder();
         while (cl.isArray()) {
             sbuf.append('[');
+            // 返回数组的组件类型，如果非数组则为null
             cl = cl.getComponentType();
         }
+        // 基本类型和void类型
         if (cl.isPrimitive()) {
             if (cl == Integer.TYPE) {
                 sbuf.append('I');
@@ -319,6 +347,7 @@ public class ObjectStreamField
                 throw new InternalError();
             }
         } else {
+            // 非基本类型签名
             sbuf.append('L' + cl.getName().replace('.', '/') + ';');
         }
         return sbuf.toString();

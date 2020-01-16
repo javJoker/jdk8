@@ -557,6 +557,7 @@ public interface Map<K,V> {
      * @see Object#equals(Object)
      * @see #equals(Object)
      */
+    // 返回此Map的hashCode值。Map的hashCode定义为Map的 entrySet()视图中每个条目的hahsCode之和。
     int hashCode();
 
     // Defaultable methods

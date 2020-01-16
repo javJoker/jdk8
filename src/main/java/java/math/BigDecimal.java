@@ -224,7 +224,7 @@ import static java.math.BigInteger.LONG_MASK;
 public class BigDecimal extends Number implements Comparable<BigDecimal> {
     /**
      * The unscaled value of this BigDecimal, as returned by {@link
-     * #unscaledValue}.
+     *      * #unscaledValue}.
      *
      * @serial
      * @see #unscaledValue
@@ -238,7 +238,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * @serial
      * @see #scale
      */
-    // 小数位
+    // 小数位数
     private final int scale;  // Note: this may have any value, so
                               // calculations must be done in longs
 
@@ -263,6 +263,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * significand information is only available from {@code intVal}.
      */
     // 前哨值
+    // {@link #intCompact}的前哨值指示有效信息只能从{@code intVal}获得。
     static final long INFLATED = Long.MIN_VALUE;
 
     private static final BigInteger INFLATED_BIGINT = BigInteger.valueOf(INFLATED);
@@ -272,6 +273,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * less than or equal to {@code Long.MAX_VALUE}, the value can be
      * compactly stored in this field and used in computations.
      */
+    // 全部转化为正数
     private final transient long intCompact;
 
     // All 18-digit base ten strings fit into a long; not all 19-digit
@@ -2715,11 +2717,14 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      */
     @Override
     public boolean equals(Object x) {
+        // 类型比较
         if (!(x instanceof BigDecimal))
             return false;
         BigDecimal xDec = (BigDecimal) x;
+        // 内存地址比较：是否同一块
         if (x == this)
             return true;
+        // 小数位比较
         if (scale != xDec.scale)
             return false;
         long s = this.intCompact;
@@ -3857,6 +3862,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
      * Returns the compact value for given {@code BigInteger}, or
      * INFLATED if too big. Relies on internal representation of
      * {@code BigInteger}.
+     */
+    /**
+     * 返回给定{@code BigInteger}的压缩值，如果太大，则返回 INFLATED。
      */
     private static long compactValFor(BigInteger b) {
         int[] m = b.mag;

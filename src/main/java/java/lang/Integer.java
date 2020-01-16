@@ -106,6 +106,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *
      * @since   JDK1.1
      */
+    //  代表基本类型的{@code Class}实例
     @SuppressWarnings("unchecked")
     public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
 

@@ -55,7 +55,19 @@ public final class Objects {
      * and {@code false} otherwise
      * @see Object#equals(Object)
      */
+    /**
+     * 如果参数彼此相等，则返回{@code true} ，否则返回{@code false}。
+     * 因此，如果两个参数均为{@code null}，则返回{@code true} ；如果正好一个参数为{@code null}，则返回{@code  false}。
+     * 否则，通过使用第一个参数的{@link Object＃equals equals}方法确定是否相等。
+     *
+     * 注意：1.这里用的第一个参数的类中的equals，如果a类中重写了equals方法就使用，否则使用父类直到Object对象
+     * 2.参数可以为空，所以比较的时候可以使用这个方法，我们也不必校验是否为空了
+     * @param a
+     * @param b 要与{@code a}比较的对象是否相等
+     * @return
+     */
     public static boolean equals(Object a, Object b) {
+        // 首先判断是不是同一块内存地址
         return (a == b) || (a != null && a.equals(b));
     }
 

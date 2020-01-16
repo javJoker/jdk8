@@ -627,6 +627,12 @@ public final class String
      * @return  the length of the sequence of characters represented by this
      *          object.
      */
+    /**
+     * 返回此字符串的长度。 长度等于字符串中 Unicode 代码单位的数量。
+     * 注意：这里返回的是Unicode 代码单位的数量。Unicode采用了的utf-16为一个单元，
+     * 如果给定的一个字符大于这个范围了那么长度就不是1了。
+     * 我们如何知道输入的字符串是多少个字符长度呢？可以使用codePointCount()方法
+     */
     public int length() {
         return value.length;
     }
@@ -981,13 +987,42 @@ public final class String
      * @see  #compareTo(String)
      * @see  #equalsIgnoreCase(String)
      */
+    /**
+     * 字符串比较（字符串转化成char数组进行比较值）
+     * 1. 当前对象不能null，否则或报空指针，所以比较的时候最好常量值、枚举值等放在前面，
+     * 或者比较前先进行为空校验
+     * 2.对于任何非空引用 x， x.equals(null) 必须返回 false
+     */
     public boolean equals(Object anObject) {
+        // 比较两个对象是不是同一块内存地址
         if (this == anObject) {
             return true;
         }
+        // 判断参数是不是String类型
+        /**
+         * 在执行类型转换之前，该方法必须使用 instanceof 运算符来检查其参数是否是正确的类型,如果此类型检查漏掉，
+         * equals 方法传递了错误类型的参数，那么 equals 方法将抛出 ClassCastException 异常，
+         * 这违反了 equals 约定。 但是，如果第一个操作数为 null，则指定 instanceof 运算符
+         * 返回 false，而不管第二个操作数中出现何种类型。 因此，如果传入 null，类型检查将返回 false，
+         * 因此不需要 明确的 null 检查。
+         *
+         * 综合起来，以下是编写高质量 equals 方法的配方（recipe）：
+         * 1. 使用 == 运算符检查参数是否为该对象的引用。如果是，返回 true。这只是一种性能优化，但是如果这种比较可
+         * 能很昂贵的话，那就值得去做。
+         * 2. 使用 instanceof 运算符来检查参数是否具有正确的类型。 如果不是，则返回 false。 通常，正确的类型是
+         * equals 方法所在的那个类。 有时候，改类实现了一些接口。 如果类实现了一个接口，该接口可以改进 equals 约
+         * 定以允许实现接口的类进行比较，那么使用接口。 集合接口（如 Set，List，Map 和 Map.Entry）具有此特性。
+         * 3. 参数转换为正确的类型。因为转换操作在 instanceof 中已经处理过，所以它肯定会成功。
+         * 4. 对于类中的每个「重要」的属性，请检查该参数属性是否与该对象对应的属性相匹配。如果所有这些测试成
+         * 功，返回 true，否则返回 false。如果步骤 2 中的类型是一个接口，那么必须通过接口方法访问参数的属性;如果
+         * 类型是类，则可以直接访问属性，这取决于属性的访问权限
+         */
         if (anObject instanceof String) {
+            // 类型强转
             String anotherString = (String)anObject;
             int n = value.length;
+
+            // 字符串长度
             if (n == anotherString.value.length) {
                 char v1[] = value;
                 char v2[] = anotherString.value;
@@ -1470,11 +1505,26 @@ public final class String
      *
      * @return  a hash code value for this object.
      */
+    // 重写hashCode值
     public int hashCode() {
         int h = hash;
         if (h == 0 && value.length > 0) {
             char val[] = value;
 
+            /**
+             * hashCode的计算逻辑：
+             * s [0] * 31 ^（n-1）+ s [1] * 31 ^（n-2）+ ... + s [n-1]
+             * 使用{@code int}算术，其中{@code s [i]}是字符串的*个第 i 个字符，
+             * {@code n}是字符串的*个长度，{@code ^}表示求幂。 （空字符串的哈希值为零。）
+             *
+             * i=0时， h = 31*0 + val[0] = 31^0 * val[0]
+             * i=1时， h = 31*(31*0 + val[0]) + val[1] = 31*val[0] + val[1]=31^1 * val[0] + val[1]
+             * i=2时， h = 31*(31*val[0] + val[1]) + val[2] = 31*31*val[0] + 31*val[1] + val[2]=31^2 * val[0] + 31^1 * val[1] + 31^0 * val[2]
+             * i=3时， h = 31*(31*val[0] + val[1]31^2 * val[0] + 31^1 * val[1] + 31^0 * val[2]) + val[3] = 31^3 * val[0] + 31^2 * val[1] + 31^1 * val[2]  + 31^0 * val[3]
+             * ……
+             * 得出
+             * s [0] * 31 ^（n-1）+ s [1] * 31 ^（n-2）+ ... + s [n-1]
+             */
             for (int i = 0; i < value.length; i++) {
                 h = 31 * h + val[i];
             }
@@ -3178,6 +3228,10 @@ public final class String
      *
      * @return  a string that has the same contents as this string, but is
      *          guaranteed to be from a pool of unique strings.
+     */
+    /**
+     * 调用intern方法时，如果池中已经包含一个等于该{@link #equals（Object）}方法确定的{@code String}对象的字符串，
+     * 则来自字符串池返回。否则，将此{@code String}对象添加到池中，并返回对此{@code String}对象的引用
      */
     public native String intern();
 }

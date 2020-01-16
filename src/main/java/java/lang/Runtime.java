@@ -42,7 +42,12 @@ import sun.reflect.Reflection;
  * @see     java.lang.Runtime#getRuntime()
  * @since   JDK1.0
  */
-
+/**
+ * 1. 每个Java应用程序都有一个类 Runtime 的单个实例，该类使该应用程序可以与该应用程序在其中运行的环境进行交互。
+ * 当前的运行时可以从 getRuntime 方法获得。
+ *
+ * 2.应用程序无法创建自己的此类的实例。
+ */
 public class Runtime {
     private static Runtime currentRuntime = new Runtime();
 
@@ -54,11 +59,16 @@ public class Runtime {
      * @return  the <code>Runtime</code> object associated with the current
      *          Java application.
      */
+    /**
+     * 返回与当前Java应用程序关联的运行时对象。 类 Runtime 的大多数方法都是实例方法，
+     * 必须相对于当前的运行时对象进行调用
+     */
     public static Runtime getRuntime() {
         return currentRuntime;
     }
 
     /** Don't let anyone else instantiate this class */
+    // 构造方法私有
     private Runtime() {}
 
     /**
@@ -631,6 +641,11 @@ public class Runtime {
      * @return  the maximum number of processors available to the virtual
      *          machine; never smaller than one
      * @since 1.4
+     */
+    /**
+     * 返回可用于Java虚拟机的处理器数量。在虚拟机的特定调用过程中，此值可能会更改。
+     * 因此，对可用处理器数量敏感的应用程序应该偶尔轮询此属性并适当地调整其资源使用情况。
+     * @return 虚拟机可使用的最大处理器数量；永远不小于一个
      */
     public native int availableProcessors();
 

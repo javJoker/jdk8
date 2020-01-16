@@ -195,6 +195,9 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
     /**
      * This mask is used to obtain the value of an int as if it were unsigned.
      */
+    /**
+     * 此掩码用于获取int的值，就好像它是无符号的一样。
+     */
     final static long LONG_MASK = 0xffffffffL;
 
     /**

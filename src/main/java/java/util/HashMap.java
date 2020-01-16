@@ -328,8 +328,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         // 重写toString
         public final String toString() { return key + "=" + value; }
 
-        // 重写hashCode方法
-        public final int hashCode() {
+        // 重写hashCode方法，为null的时候hashCode返回0
+        public final int
+        hashCode() {
             return Objects.hashCode(key) ^ Objects.hashCode(value);
         }
 
@@ -450,6 +451,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * (We also tolerate length zero in some operations to allow
      * bootstrapping mechanics that are currently not needed.)
      */
+    // 懒加载，第一次使用的时候初始化
     transient Node<K,V>[] table;
 
     /**
@@ -619,6 +621,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *
      * @see #put(Object, Object)
      */
+    // 返回值为null，两种情况：
+    // 1.这个key对应的value在map中不存在
+    // 2.key对应的value存在，但是value的值为null
+    // 以上两种情况可以通过containsKey()方法来判断
     public V get(Object key) {
         Node<K,V> e;
         return (e = getNode(hash(key), key)) == null ? null : e.value;

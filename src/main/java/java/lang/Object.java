@@ -97,6 +97,7 @@ public class Object {
      * @see     java.lang.Object#equals(java.lang.Object)
      * @see     java.lang.System#identityHashCode
      */
+    // 返回hashCode值，一般为内存地址，为null的时候没有分配内存会报错误，
     public native int hashCode();
 
     /**

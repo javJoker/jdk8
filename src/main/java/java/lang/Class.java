@@ -527,6 +527,7 @@ public final class Class<T> implements java.io.Serializable,
      *          {@code false} otherwise.
      * @since   JDK1.1
      */
+    // 判断是否为数组类型
     public native boolean isArray();
 
 
@@ -557,6 +558,13 @@ public final class Class<T> implements java.io.Serializable,
      * @see     java.lang.Double#TYPE
      * @see     java.lang.Void#TYPE
      * @since JDK1.1
+     */
+    /**
+     *
+     * 确定指定的{@code Class}对象是否表示一个基本类型。
+     * Class对象来表示八个基本类型和void。则为true，否则false
+     *
+     * 注意：基本类型的包装类不属于基本类型
      */
     public native boolean isPrimitive();
 
@@ -636,6 +644,14 @@ public final class Class<T> implements java.io.Serializable,
      * @return  the name of the class or interface
      *          represented by this object.
      */
+    /**
+     * 返回此 Class对象表示的实体的名称
+     *
+     * 1.如果此类对象表示的引用类型不是数组类型，则返回该类的二进制名称
+     * 2.如果此类对象表示基本类型或void，则返回的名称是一个{@code String}
+     * 3.如果此类对象表示一类数组，则名称的内部形式由元素类型的名称组成，其后一个或多个“[”字符表示数组的深度嵌套。
+     *
+     */
     public String getName() {
         String name = this.name;
         if (name == null)
@@ -644,7 +660,9 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     // cache the name to reduce the number of calls into the VM
+    // 缓存名称
     private transient String name;
+    // ？？？本地方法
     private native String getName0();
 
     /**
@@ -841,7 +859,9 @@ public final class Class<T> implements java.io.Serializable,
      *
      * @return an array of interfaces implemented by this class.
      */
+    // 返回接口数组
     public Class<?>[] getInterfaces() {
+        // 反射缓存
         ReflectionData<T> rd = reflectionData();
         if (rd == null) {
             // no cloning required
@@ -853,10 +873,12 @@ public final class Class<T> implements java.io.Serializable,
                 rd.interfaces = interfaces;
             }
             // defensively copy before handing over to user code
+            // 在移交给用户代码之前进行防御性复制 ????
             return interfaces.clone();
         }
     }
 
+    // ???
     private native Class<?>[] getInterfaces0();
 
     /**
@@ -908,8 +930,23 @@ public final class Class<T> implements java.io.Serializable,
      * @return an array of interfaces implemented by this class
      * @since 1.5
      */
+    /**
+     * 返回表示由该对象表示的类或接口直接实现的接口的{@code Type}。
+     *
+     * 1.如果超级接口是参数化类型，则为其返回的 {@code Type}对象必须准确反映源代码中使用的实际类型参数。
+     * 代表每个超级接口的参数化类型已创建，如果之前尚未创建。
+     * 2.如果此对象表示一个类，则返回值是一个数组，其中包含表示该类实现的所有接口的对象。
+     * 接口对象在数组中的顺序与该对象表示的类声明的{@code implements}子句中接口名称的顺序相对应。
+     * 对于数组类，接口{@code Cloneable}和{@code Serializable}按此顺序返回。
+     * 3.如果此对象表示接口，则数组包含对象，这些对象表示接口直接扩展的所有接口。
+     * 接口对象在数组中的顺序与该对象表示的接口的 {@code extended}子句中接口名称的顺序相对应。
+     * 4.如果此对象表示没有实现任何接口的类或接口，则该方法返回一个长度为 0的数组。
+     * 5.如果此对象表示一个原始类型或void，则方法返回一个长度为0的数组。
+     */
     public Type[] getGenericInterfaces() {
+        // ???
         ClassRepository info = getGenericInfo();
+        // ???
         return (info == null) ?  getInterfaces() : info.getSuperInterfaces();
     }
 
@@ -923,6 +960,11 @@ public final class Class<T> implements java.io.Serializable,
      * class if this class is an array
      * @see     java.lang.reflect.Array
      * @since JDK1.1
+     */
+    /**
+     * 本地方法
+     * 返回表示数组的组件类型的{@code Class}，也就是说返回数组的每个元素的类型
+     * 如果此类不表示数组类，则此方法返回null。
      */
     public native Class<?> getComponentType();
 
@@ -2459,9 +2501,12 @@ public final class Class<T> implements java.io.Serializable,
      */
 
     // Caches for certain reflective results
+    // 缓存开启开关
     private static boolean useCaches = true;
 
     // reflection data that might get invalidated when JVM TI RedefineClasses() is called
+    // class类内部提供了一个ReflectionData内部类用来存放反射数据的缓存，并声明了一个reflectionData域，
+    // 由于稍后进行按需延迟加载并缓存，所以这个域并没有指向一个实例化的ReflectionData对象。
     private static class ReflectionData<T> {
         volatile Field[] declaredFields;
         volatile Field[] publicFields;
@@ -2486,10 +2531,13 @@ public final class Class<T> implements java.io.Serializable,
 
     // Incremented by the VM on each call to JVM TI RedefineClasses()
     // that redefines this class or a superclass.
+    // ????
     private volatile transient int classRedefinedCount = 0;
 
     // Lazily create and cache ReflectionData
+    // 懒加载缓存
     private ReflectionData<T> reflectionData() {
+        // SoftReference 软引用
         SoftReference<ReflectionData<T>> reflectionData = this.reflectionData;
         int classRedefinedCount = this.classRedefinedCount;
         ReflectionData<T> rd;
@@ -2501,9 +2549,11 @@ public final class Class<T> implements java.io.Serializable,
         }
         // else no SoftReference or cleared SoftReference or stale ReflectionData
         // -> create and replace new instance
+        // 否则，没有SoftReference或已清除的SoftReference或陈旧的ReflectionData ->创建并替换新实例
         return newReflectionData(reflectionData, classRedefinedCount);
     }
 
+    // 初始化缓存
     private ReflectionData<T> newReflectionData(SoftReference<ReflectionData<T>> oldReflectionData,
                                                 int classRedefinedCount) {
         if (!useCaches) return null;
@@ -2511,6 +2561,7 @@ public final class Class<T> implements java.io.Serializable,
         while (true) {
             ReflectionData<T> rd = new ReflectionData<>(classRedefinedCount);
             // try to CAS it...
+            // ???
             if (Atomic.casReflectionData(this, oldReflectionData, new SoftReference<>(rd))) {
                 return rd;
             }
@@ -2526,24 +2577,39 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     // Generic signature handling
+    // 通用签名处理 ??? 底层
     private native String getGenericSignature0();
 
     // Generic info repository; lazily initialized
+    /*
+     * 通用信息存储库；延迟初始化
+     * 这个对象有什么用？？？
+     */
     private volatile transient ClassRepository genericInfo;
 
     // accessor for factory
+    // ???
     private GenericsFactory getFactory() {
         // create scope and factory
+        // ???
         return CoreReflectionFactory.make(this, ClassScope.make(this));
     }
 
     // accessor for generic info repository;
     // generic info is lazily initialized
+    // 通用信息存储库的访问器；通用信息被延迟初始化
+    /**
+     * ClassRepository对象为默认值，则返回为null，否则返回ClassRepository对象
+     */
     private ClassRepository getGenericInfo() {
         ClassRepository genericInfo = this.genericInfo;
         if (genericInfo == null) {
             String signature = getGenericSignature0();
             if (signature == null) {
+                /**
+                 * 获取通用签名为空的时候设置默认值，
+                 * 默认值为 “Ljava/lang/Object;”，L表示为接口或者类
+                 */
                 genericInfo = ClassRepository.NONE;
             } else {
                 genericInfo = ClassRepository.make(signature, getFactory());
