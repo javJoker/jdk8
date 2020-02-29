@@ -1447,7 +1447,8 @@ public final class Integer extends Number implements Comparable<Integer> {
      *     is equal to zero.
      * @since 1.5
      */
-    // 返回指定{@code int}值的二进制补码二进制表示中最高位（“最左侧”）一位之前的零位数。
+    // 返回指定{@code int}值的二进制补码二进制表示中最高位（“最左侧”）1之前的零位数。
+    // 例如：n为16 0001 0000 则Integer.numberOfLeadingZeros(n)为27，因为是int类型为32为，1为第5位，32-5=27
     public static int numberOfLeadingZeros(int i) {
         // HD, Figure 5-6
         if (i == 0)

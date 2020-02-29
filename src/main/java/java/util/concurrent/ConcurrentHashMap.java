@@ -548,7 +548,12 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * The largest possible (non-power of two) array size.
      * Needed by toArray and related methods.
      */
-    // 最大可能的数组大小 ???
+    /**
+     * 最大可能的数组大小
+     *
+     * 虚拟机限制的最大数组长度，在ArrayList中有说过，jdk1.8新引入的，
+     * ConcurrentHashMap的主体代码中是不使用这个的，主要用在Collection.toArray两个方法中
+     */
     static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
     /**
@@ -556,6 +561,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * defined for compatibility with previous versions of this class.
      */
     // 该表的默认并发级别。未使用，但定义为与此类的先前版本兼容。
+    // 默认并行级别，主体代码中未使用此常量，为了兼容性，保留了之前的定义，主要是配合同样是为了兼容性的Segment使用，另外在构造方法中有一些作用
+    // 千万注意，1.8的并发级别有了大的改动，具体并发级别可以认为是hash桶是数量，也就是容量，会随扩容而改变，不再是固定值
     private static final int DEFAULT_CONCURRENCY_LEVEL = 16;
 
     /**
@@ -594,6 +601,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * conflicts between resizing and treeification thresholds.
      */
     // 最小数容量
+    // 当table数组的长度小于此值时，不会把链表转化为红黑树。
+    // 所以转化为红黑树有两个条件，还有一个是 TREEIFY_THRESHOLD
     static final int MIN_TREEIFY_CAPACITY = 64;
 
     /**
@@ -609,6 +618,18 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      *
      * ？？？
      */
+    // 博客：https://blog.csdn.net/u011392897/article/details/60479937
+    // 扩容操作中，transfer这个步骤是允许多线程的，这个常量表示一个线程执行transfer时，
+    // 最少要对连续的16个hash桶进行transfer（不足16就按16算，多控制下正负号就行）
+    //
+    // 也就是单线程执行transfer时的最小任务量，单位为一个hash桶，这就是线程的transfer的步长（stride）
+    // 最小值是DEFAULT_CAPACITY，不使用太小的值，避免太小的值引起transfer时线程竞争过多，如果计算出来的值小于此值，就使用此值
+    // 正常步骤中会根据CPU核心数目来算出实际的，一个核心允许8个线程并发执行扩容操作的transfer步骤，这个8是个经验值，不能调整的
+    // 因为transfer操作不是IO操作，也不是死循环那种100%的CPU计算，CPU计算率中等，1核心允许8个线程并发完成扩容，理想情况下也算是比较合理的值
+    // 一段代码的IO操作越多，1核心对应的线程就要相应设置多点，CPU计算越多，1核心对应的线程就要相应设置少一些
+    //
+    // 表明：默认的容量是16，也就是默认构造的实例，第一次扩容实际上是单线程执行的，看上去是可以多线程并发（方法允许多个线程进入），
+    //     但是实际上其余的线程都会被一些if判断拦截掉，不会真正去执行扩容
     private static final int MIN_TRANSFER_STRIDE = 16;
 
     /**
@@ -616,7 +637,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * Must be at least 6 for 32bit arrays.
      */
     /**
-     * sizeCtl中用于生成标记的位数。 对于32位阵列，必须至少为6。
+     * 用于生成每次扩容都唯一的生成戳的数。 对于32位阵列，必须至少为6。
+     * 注意：这个没有使用final形容，不是常量。但是也没有提供修改的方法
      * ？？？？
      */
     private static int RESIZE_STAMP_BITS = 16;
@@ -626,8 +648,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * Must fit in 32 - RESIZE_STAMP_BITS bits.
      */
     /**
-     * 可以帮助调整大小的最大线程数。 必须为32-RESIZE_STAMP_BITS位。
-     *
+     * 最大的扩容线程的数量。 必须为32-RESIZE_STAMP_BITS位。
+     * 值为32768
      * ????
      */
     private static final int MAX_RESIZERS = (1 << (32 - RESIZE_STAMP_BITS)) - 1;
@@ -639,28 +661,48 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * 在sizeCtl中记录大小标记的位移位。
      *
      * ????
+     *
+     * 移位量，把生成戳移位后保存在sizeCtl中当做扩容线程计数的基数，
+     * 相反方向移位后能够反解出生成戳
      */
     private static final int RESIZE_STAMP_SHIFT = 32 - RESIZE_STAMP_BITS;
 
     /*
      * Encodings for Node hash fields. See above for explanation.
      */
-    // 节点哈希字段的编码 ???
+    // 节点哈希字段的编码
+    // 下面几个是特殊的节点的hash值，正常节点的hash值在hash函数中都处理过了，不会出现负数的情况，特殊节点在各自的实现类中有特殊的遍历方法
+    // ForwardingNode的hash值，ForwardingNode是一种临时节点，在扩进行中才会出现，并且它不存储实际的数据
+    // 如果旧数组的一个hash桶中全部的节点都迁移到新数组中，旧数组就在这个hash桶中放置一个ForwardingNode
+    // 读操作或者迭代读时碰到ForwardingNode时，将操作转发到扩容后的新的table数组上去执行，写操作碰见它时，则尝试帮助扩容
     static final int MOVED     = -1; // hash for forwarding nodes                        表示正在转移
+
+    // TreeBin的hash值，TreeBin是ConcurrentHashMap中用于代理操作TreeNode的特殊节点，持有存储实际数据的红黑树的根节点
+    // 因为红黑树进行写入操作，整个树的结构可能会有很大的变化，这个对读线程有很大的影响，
+    // 所以TreeBin还要维护一个简单读写锁，这是相对HashMap，这个类新引入这种特殊节点的重要原因
     static final int TREEBIN   = -2; // hash for roots of trees                          表示已经转换成树
+
+
+    // ReservationNode的hash值，ReservationNode是一个保留节点，就是个占位符，不会保存实际的数据，正常情况是不会出现的，
+    // 在jdk1.8新的函数式有关的两个方法computeIfAbsent和compute中才会出现
     static final int RESERVED  = -3; // hash for transient reservations                  临时保留的哈希
+
+    // 用于和负数hash值进行 & 运算，将其转化为正数（绝对值不相等），Hashtable中定位hash桶也有使用这种方式来进行负数转正数
     static final int HASH_BITS = 0x7fffffff; // usable bits of normal node hash          普通节点哈希的可用位，这个是Integer.MAX_VALUE的值
 
     /** Number of CPUS, to place bounds on some sizings */
     /**
      * Runtime.getRuntime().availableProcessors() ---> 虚拟机可使用的最大处理器数量
-     * CPUS的数量，用于限制某些尺寸 ????
+     * CPUS的数量，用于限制某些尺寸
+     *
+     * 在多核处理器上面，可以使用NCPU处理器数量，每个核的处理数据的步长是8，
+     * 来计算一个tab可以分成多少个任务包stride
      */
     static final int NCPU = Runtime.getRuntime().availableProcessors();
 
     /** For serialization compatibility. */
     /**
-     * 为了实现序列化兼容性
+     * 为了实现序列化兼容性，这是为了兼容以前的版本
      * ???
      */
     private static final ObjectStreamField[] serialPersistentFields = {
@@ -895,12 +937,14 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * next element count value upon which to resize the table.
      */
     /**
-     * 用来控制表初始化和扩容的，默认值为0，当在初始化的时候指定了大小，这会将这个大小保存在sizeCtl中，大小为数组的0.75
+     * 用来控制表初始化和扩容的，默认值为0。当在初始化的时候指定了大小，
+     * 这会将这个大小保存在sizeCtl中，大小为数组的0.75
      *
      * 如果为负，则表正在初始化或调整大小：
-     * -1表示初始化，
-     * 否则-（1 + 活动的扩张线程）。
-     * 否则，当table为null时，保留创建时要使用的初始表大小，或者默认为0。
+     * 0：默认值，当table为null时，保留创建时要使用的初始表大小，或者默认为0。
+     * -1：代表哈希表正在进行初始化
+     * 大于0：相当于 HashMap 中的 threshold，表示阈值
+     * 小于-1：代表有多个线程正在进行扩容
      *
      */
     private transient volatile int sizeCtl;
@@ -956,12 +1000,33 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative
      */
+    // 构造方法
     public ConcurrentHashMap(int initialCapacity) {
+        // 初始容量大小不能小于0
         if (initialCapacity < 0)
             throw new IllegalArgumentException();
+        /**
+         * 此处判断和HashMap不同
+         * 如果initialCapacity大于最大容量的一半时，就取最大容量
+         * initialCapacity >= (MAXIMUM_CAPACITY >>> 1 -----> 为什么这样判断呢？
+         * 因为tableSizeFor方法参数和HashMap不同了，如果还是跟HashMap一样的逻辑会溢出的
+         *
+         *
+         * 在网上找了一篇博客  ————》https://www.jianshu.com/p/e575f523d77c
+         * 那么为什么tableSizeFor()的参数为initialCapacity + (initialCapacity >>> 1) + 1
+         * 而不是直接传入initialCapacity呢?
+         * 在ConcurrentHashMap有一个参数LOAD_FACTOR，默认值为0.75f。假设当前map容量为16，
+         * 当其中的元素个数达到16*0.75f，也就是12个的时候，map为了最大化利用hash的作用，
+         * 会进行扩容，也就是map中的元素个数一般不会达到容量的大小。
+         *
+         * 使用参数initialCapacity + (initialCapacity >>> 1) + 1来设置容量，
+         * 不至于在初始化时就超过上诉"12"这个元素，并且能提供一些多余的空间，
+         * 不至于在插入元素后马上就进行比较耗时的扩容操作。
+         */
         int cap = ((initialCapacity >= (MAXIMUM_CAPACITY >>> 1)) ?
                    MAXIMUM_CAPACITY :
                    tableSizeFor(initialCapacity + (initialCapacity >>> 1) + 1));
+        // sizeCtl可以使用负数，但是代表的含义就不同了
         this.sizeCtl = cap;
     }
 
@@ -970,7 +1035,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      *
      * @param m the map
      */
+    // 构造方法
     public ConcurrentHashMap(Map<? extends K, ? extends V> m) {
+        // 设置阀值
         this.sizeCtl = DEFAULT_CAPACITY;
         putAll(m);
     }
@@ -1201,7 +1268,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      *
      * @param m mappings to be stored in this map
      */
+    // 存储map
     public void putAll(Map<? extends K, ? extends V> m) {
+        // 扩容
         tryPresize(m.size());
         for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
             putVal(e.getKey(), e.getValue(), false);
@@ -2301,6 +2370,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * A node inserted at head of bins during transfer operations.
      */
     /**
+     * 正在被迁移的 Node的对象
+     *
      * 在转移的时候放在头部的节点，是一个空节点
      *
      * ForwardingNode 继承了 Node
@@ -2366,7 +2437,12 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * Returns the stamp bits for resizing a table of size n.
      * Must be negative when shifted left by RESIZE_STAMP_SHIFT.
      */
+    /**
+     * 返回用于调整大小为n的表的标记位。 向左移动RESIZE_STAMP_SHIFT时必须为负。
+     * ???
+     */
     static final int resizeStamp(int n) {
+        // Integer.numberOfLeadingZeros(n) --》 返回指定{@code int}值的二进制补码二进制表示中最高位（“最左侧”）1之前的零位数。
         return Integer.numberOfLeadingZeros(n) | (1 << (RESIZE_STAMP_BITS - 1));
     }
 
@@ -2476,40 +2552,69 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      *
      * @param size number of elements (doesn't need to be perfectly accurate)
      */
+    // 尝试调整表的大小以容纳给定数量的元素
     private final void tryPresize(int size) {
+        // 计算容量大小
         int c = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY :
             tableSizeFor(size + (size >>> 1) + 1);
         int sc;
+        // table初始化的时候，sizeCtl默认值为0
         while ((sc = sizeCtl) >= 0) {
             Node<K,V>[] tab = table; int n;
+            // tab 为空或者长度为0的时候
+            // 如果table还未进行初始化
             if (tab == null || (n = tab.length) == 0) {
+                /**
+                 * 原table的sizeCtl大小和新容量大小进行比较初始化n的值
+                 * （1）原table的sizeCtl大于新容量大小，n为原table的sizeCtl
+                 * （2）原table的sizeCtl小于等于新容量大小，n为新容量大小
+                 */
                 n = (sc > c) ? sc : c;
+                // CAS修改sizeCtl为-1，表示table正在进行初始化
                 if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
                     try {
+                        // 判断table的地址是否改变了
+                        // 确认其他线程没有对table修改
                         if (table == tab) {
+                            // 重新生成node数组赋给table
                             @SuppressWarnings("unchecked")
                             Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
                             table = nt;
+                            // 下面相当于n*0.75
                             sc = n - (n >>> 2);
                         }
                     } finally {
+                        // sizeCtl为数组大小的0.75，此时表示阀值
                         sizeCtl = sc;
                     }
                 }
             }
+            // 如果扩容大小没有达到阈值，或者 n（tab的大小）超过最大容量
             else if (c <= sc || n >= MAXIMUM_CAPACITY)
                 break;
+            // 确认其他线程没有对table修改
             else if (tab == table) {
+                // ???
                 int rs = resizeStamp(n);
+                /**
+                 * 原table的sizeCtl值
+                 * -1：代表哈希表正在进行初始化
+                 * 小于-1：代表有多个线程正在进行扩容
+                 */
                 if (sc < 0) {
                     Node<K,V>[] nt;
+                    // ???
                     if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
                         sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
                         transferIndex <= 0)
                         break;
+                    // ???
+                    // 用 CAS 将 sizeCtl 加 1，然后执行 transfer 方法
+                    // 此时 nextTab 不为 null
                     if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1))
                         transfer(tab, nt);
                 }
+                // ??
                 else if (U.compareAndSwapInt(this, SIZECTL, sc,
                                              (rs << RESIZE_STAMP_SHIFT) + 2))
                     transfer(tab, null);
@@ -2521,95 +2626,188 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * Moves and/or copies the nodes in each bin to new table. See
      * above for explanation.
      */
+    // 数据迁移
     private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
         int n = tab.length, stride;
+        /*
+         * stride 在单核下直接等于 n，多核模式下为 (n>>>3)/NCPU，最小值是 16
+         * stride 可以理解为”步长“，有 n 个位置是需要进行迁移的，
+         * 将这 n 个任务分为多个任务包，每个任务包有 stride 个任务
+         *
+         * 为什么这里n >>> 3呢？
+         * 这里是向下取整的，由于容器容量大小是2的次幂，最小为16，所以n >>> 3都会整除的
+         * 因为一核允许8个线程进行操作，具体解析看MIN_TRANSFER_STRIDE注释
+         *
+         * 表明：默认的容量是16，也就是默认构造的实例，第一次扩容实际上是单线程执行的，看上去是可以多线程并发（方法允许多个线程进入），
+         * 但是实际上其余的线程都会被一些if判断拦截掉，不会真正去执行扩容
+         */
         if ((stride = (NCPU > 1) ? (n >>> 3) / NCPU : n) < MIN_TRANSFER_STRIDE)
+            // 单个线程允许处理的最少table桶首节点个数16
+            // 即每个线程的处理任务量
             stride = MIN_TRANSFER_STRIDE; // subdivide range
+        // nextTab未初始化
         if (nextTab == null) {            // initiating
             try {
+                // 扩容后的容量为当前的2倍
                 @SuppressWarnings("unchecked")
                 Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n << 1];
                 nextTab = nt;
             } catch (Throwable ex) {      // try to cope with OOME
+                // 扩容的时候也考虑了OOM，👍
                 sizeCtl = Integer.MAX_VALUE;
                 return;
             }
             nextTable = nextTab;
+            // transferIndex为扩容复制过程中的桶首节点遍历索引
+            // 所以从n开始，表示从后向前遍历
             transferIndex = n;
         }
         int nextn = nextTab.length;
+
+        //ForwardingNode是正在被迁移的Node，它的key，value，next都为null
+        //hash为MOVED，其中有个nextTable属性指向nextTab
         ForwardingNode<K,V> fwd = new ForwardingNode<K,V>(nextTab);
+
+        //advance为true，可以继续迁移下一个节点，false则停止迁移
         boolean advance = true;
+        //是否结束迁移
         boolean finishing = false; // to ensure sweep before committing nextTab
+
         for (int i = 0, bound = 0;;) {
             Node<K,V> f; int fh;
             while (advance) {
                 int nextIndex, nextBound;
+                // 是否超过了边界或者结束了
                 if (--i >= bound || finishing)
+                    // 停止迁移
                     advance = false;
+                // 迁移下标小于等于0的时候
+                // nextIndex初始化的值为tab.length，从后向前遍历
                 else if ((nextIndex = transferIndex) <= 0) {
                     i = -1;
+                    // 停止迁移
                     advance = false;
                 }
+                // 从后向前遍历，每次为减去一个步长
                 else if (U.compareAndSwapInt
                          (this, TRANSFERINDEX, nextIndex,
                           nextBound = (nextIndex > stride ?
                                        nextIndex - stride : 0))) {
+                    // 重新设置边界
                     bound = nextBound;
+                    // tab中从后往前遍历的
                     i = nextIndex - 1;
                     advance = false;
                 }
             }
+
+            /**
+             *  （1）i < 0说明所有迁移任务完成了
+             *  （2）i是tab的下标，不能大于tab的长度n
+             *  （3）nextn是nextTab的长度，根据上面的逻辑初始化的时候应该是tab大小的2倍，
+             *  所以i + n（初始值：i=n-1,所以i+n=2*n-1）应该小于nextn
+             */
             if (i < 0 || i >= n || i + n >= nextn) {
                 int sc;
+                // 迁移结束
                 if (finishing) {
                     nextTable = null;
                     table = nextTab;
+                    // n*2-n/2=n*1.5=2n*0.75 计算新tab的阀值
                     sizeCtl = (n << 1) - (n >>> 1);
                     return;
                 }
+
+                // ???
+                // 该线程完成迁移，sizeCtl - 1，对应之前helpTransfer()中+1
+                // 之前我们说过，sizeCtl 在迁移前会设置为 (rs << RESIZE_STAMP_SHIFT) + 2
+                // 然后，每有一个线程参与迁移就会将 sizeCtl 加 1，
+                // 这里使用 CAS 操作对 sizeCtl 进行减 1，代表做完了属于自己的任务
                 if (U.compareAndSwapInt(this, SIZECTL, sc = sizeCtl, sc - 1)) {
+                    // ???
+                    // 不相等说明还有其他线程没完成迁移，该线程结束任务
                     if ((sc - 2) != resizeStamp(n) << RESIZE_STAMP_SHIFT)
                         return;
+                    // ??
+                    // 到这里，说明 (sc - 2) == resizeStamp(n) << RESIZE_STAMP_SHIFT，
+                    // 也就是说，所有的迁移任务都做完了，也就会进入到上面的 if(finishing){} 分支了
                     finishing = advance = true;
+                    // 为什么i要设置为tab的长度？？？
+                    //
                     i = n; // recheck before commit
                 }
             }
+            // 如果位置 i 处是空的，没有任何节点，那么放入刚刚初始化的 ForwardingNode ”空节点“
             else if ((f = tabAt(tab, i)) == null)
+                // 期望tab中的第i个位置上节点为null才会操作成功
+                // advance为true，可以继续迁移下一个节点，false则停止迁移
                 advance = casTabAt(tab, i, null, fwd);
+            // 该tab中的i位置处是一个 ForwardingNode，代表该位置已经迁移过了
             else if ((fh = f.hash) == MOVED)
                 advance = true; // already processed
             else {
+                // 锁住当前tab桶f链表的首节点
                 synchronized (f) {
+                    // 判断tab中i位置上的节点是否为f，也就是判断操作之前是否没有被修改过
                     if (tabAt(tab, i) == f) {
+                        // 不需要移动的元素置入ln为首的链表
+                        // 需要移动的元素置入hn为首的链表
                         Node<K,V> ln, hn;
+
+                        // ？？？
+                        // 头结点的 hash 大于 0，说明是链表的 Node 节点
                         if (fh >= 0) {
+                            /*
+                             * n是tab的数组的长度，获取hash值在n二级最高位数
+                             * 为什么要这样操作呢？
+                             * 因为newTab的容量扩容为原来tab的两倍，获取最高位是否为1还是0
+                             */
                             int runBit = fh & n;
                             Node<K,V> lastRun = f;
                             for (Node<K,V> p = f.next; p != null; p = p.next) {
+                                // 获取hash值在n二级最高位数
                                 int b = p.hash & n;
+                                // newTab长度的最高位一个是1，一个是0
                                 if (b != runBit) {
+                                    // 赋值当前的节点和hash值
                                     runBit = b;
                                     lastRun = p;
                                 }
                             }
+
+                            // 不需要移动
                             if (runBit == 0) {
                                 ln = lastRun;
                                 hn = null;
                             }
+                            // 需要移动
                             else {
                                 hn = lastRun;
                                 ln = null;
                             }
+
+                            // 又从桶槽首节点遍历，将原来桶槽的链表分为两个，
+                            // 一个是需要移动，一个是不需要移动的
+                            //
+                            // 如果fh&n不变的链表的runbit都是0，则nextTab[i]内元素ln前逆序，ln及其之后顺序
+                            // 否则，nextTab[i+n]内元素全部相对原table逆序
+                            // 这是通过一个节点一个节点的往nextTab添加
                             for (Node<K,V> p = f; p != lastRun; p = p.next) {
                                 int ph = p.hash; K pk = p.key; V pv = p.val;
+                                // 最高位是否为0，不需要移动
                                 if ((ph & n) == 0)
                                     ln = new Node<K,V>(ph, pk, pv, ln);
+                                // 需要移动
                                 else
                                     hn = new Node<K,V>(ph, pk, pv, hn);
                             }
+                            //把两条链表整体迁移到nextTab中
+                            // 在nextTab中不需要移动的
                             setTabAt(nextTab, i, ln);
+                            // 在nextTab中需要移动的
                             setTabAt(nextTab, i + n, hn);
+                            //将原桶标识位已经处理
+                            // 为什么相同的方法会有不同的解析，须看native实现 ？？？？
                             setTabAt(tab, i, fwd);
                             advance = true;
                         }
@@ -2879,11 +3077,20 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * forcing writers (who hold bin lock) to wait for readers (who do
      * not) to complete before tree restructuring operations.
      */
+    /**
+     * 桶顶部使用的TreeNodes。 TreeBins不保存用户键或值，
+     * 而是指向TreeNode列表及其根。它们还维护一个读写锁迫使编写者（谁拥有bin锁）
+     * 等待读者（不这样做）在完成树重组操作之前完成操作
+     */
     static final class TreeBin<K,V> extends Node<K,V> {
         TreeNode<K,V> root;
         volatile TreeNode<K,V> first;
         volatile Thread waiter;
+        // 锁状态
         volatile int lockState;
+
+        // 锁状态值列表
+        // 为什么是1，2，4，不是1，2，3呢？
         // values for lockState
         static final int WRITER = 1; // set while holding write lock
         static final int WAITER = 2; // set when waiting for write lock
@@ -2896,11 +3103,20 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
          * equivalence across rebalancings. Tie-breaking further than
          * necessary simplifies testing a bit.
          */
+        /**
+         * ？？？
+         * 打破平衡的实用程序，用于在 hashCodes相等且不可比较时对插入进行排序。
+         * 我们不需要总请求，只需一个一致的插入规则即可在重新平衡之间保持等价。
+         * 打破平局不必要地简化了测试。
+         */
         static int tieBreakOrder(Object a, Object b) {
             int d;
+            // d = a.getClass().getName().compareTo(b.getClass().getName())) == 0
+            // 判断对象a类型是否和b类型一样
             if (a == null || b == null ||
                 (d = a.getClass().getName().
                  compareTo(b.getClass().getName())) == 0)
+                // 比较两个对象的hashCode的值
                 d = (System.identityHashCode(a) <= System.identityHashCode(b) ?
                      -1 : 1);
             return d;
@@ -6512,7 +6728,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     }
 
     // Unsafe mechanics
-    // ？？？
+    // Unsafe使用时的参数
     private static final sun.misc.Unsafe U;
     private static final long SIZECTL;
     private static final long TRANSFERINDEX;

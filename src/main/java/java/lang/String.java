@@ -114,9 +114,11 @@ import java.util.regex.PatternSyntaxException;
 public final class String
     implements java.io.Serializable, Comparable<String>, CharSequence {
     /** The value is used for character storage. */
+    // 字符数组
     private final char value[];
 
     /** Cache the hash code for the string */
+    // hashCode,默认为0
     private int hash; // Default to 0
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
@@ -1193,9 +1195,15 @@ public final class String
      *          value greater than {@code 0} if this string is
      *          lexicographically greater than the string argument.
      */
+    /**
+     * 按字典顺序比较两个字符串
+     *
+     * 比较是基于字符串中每个字符的Unicode值.
+     */
     public int compareTo(String anotherString) {
         int len1 = value.length;
         int len2 = anotherString.value.length;
+        // 获取长度最小的值是多少
         int lim = Math.min(len1, len2);
         char v1[] = value;
         char v2[] = anotherString.value;
@@ -1204,11 +1212,13 @@ public final class String
         while (k < lim) {
             char c1 = v1[k];
             char c2 = v2[k];
+            // 不相等，返回字符差值
             if (c1 != c2) {
                 return c1 - c2;
             }
             k++;
         }
+        // 返回length长度差值
         return len1 - len2;
     }
 

@@ -3176,6 +3176,14 @@ public class Arrays {
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
      */
+    /**
+     * 复制指定的数组，以空值截断或填充（如有必要），以便副本具有指定的长度。
+     * 对于在原始数组和副本中均有效的所有索引，两个数组将包含相同的值。
+     * 对于在副本中有效但在原始副本中无效的任何索引，副本将包含null。
+     * 只有当指定的长度大于原始数组的长度时，此类索引才会存在。 结果数组与原始数组完全相同。
+     *
+     * 返回原始数组的副本，被截断或填充为空*以获取指定的长度
+     */
     @SuppressWarnings("unchecked")
     public static <T> T[] copyOf(T[] original, int newLength) {
         return (T[]) copyOf(original, newLength, original.getClass());
@@ -3205,11 +3213,14 @@ public class Arrays {
      *     an array of class <tt>newType</tt>
      * @since 1.6
      */
+    // copy数组
     public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
+        // 类型为Object数组，初始化Object数组，否则调用Array.newInstance初始化数组
         @SuppressWarnings("unchecked")
         T[] copy = ((Object)newType == (Object)Object[].class)
             ? (T[]) new Object[newLength]
             : (T[]) Array.newInstance(newType.getComponentType(), newLength);
+        // copy数组
         System.arraycopy(original, 0, copy, 0,
                          Math.min(original.length, newLength));
         return copy;

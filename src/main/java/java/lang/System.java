@@ -490,6 +490,29 @@ public final class System {
      * @exception  NullPointerException if either <code>src</code> or
      *               <code>dest</code> is <code>null</code>.
      */
+    /**
+     * 如果 src和 dest 参数引用同一数组对象，然后执行复制，就好像首先将 srcPos 到
+     * srcPos + length-1 处的分量复制到具有 length 的临时数组中一样组件，
+     * 然后将临时数组的内容复制到目标数组的 destPos + length-1 的位置  destPos中。
+     *
+     * 抛出NullPointerException情况：src或者dest为null的时候
+     *
+     * 抛出ArrayStoreException异常：
+     * （1）src或者dest的引用为非数组的时候
+     * （2）
+     *
+     * 抛出IndexOutOfBoundsException异常：
+     * （1）srcPos或者destPos或者length的值为负数的的时候
+     * （2）srcPos+length大于src.length
+     * （3）destPos+length大于dest.length
+     *
+     *
+     * @param src 原数组
+     * @param srcPos 原数组的开始下标
+     * @param dest 目标数组
+     * @param destPos 目标数组的开始小标
+     * @param length 复制的长度
+     */
     public static native void arraycopy(Object src,  int  srcPos,
                                         Object dest, int destPos,
                                         int length);

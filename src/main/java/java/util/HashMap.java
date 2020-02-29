@@ -463,6 +463,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * The number of key-value mappings contained in this map.
      */
+    // 此映射中包含的键-值映射数
     transient int size;
 
     /**
@@ -764,7 +765,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 V oldValue = e.value;
                 if (!onlyIfAbsent || oldValue == null)
                     e.value = value;
-                // 空操作
+                // 空操作 ---> 既然是空操作为什么还需要写呢？
+                // 因为LinkedHashMap继承了HashMap这个类，这个方法在LinkedHashMap中使用
                 afterNodeAccess(e);
                 return oldValue;
             }
@@ -1980,6 +1982,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     // Callbacks to allow LinkedHashMap post-actions
+    // 允许LinkedHashMap后处理的回调
+    // 空操作 ---> 既然是空操作为什么还需要写呢？
+    // 因为LinkedHashMap继承了HashMap这个类，下面这些方法在LinkedHashMap中使用
     void afterNodeAccess(Node<K,V> p) { }
     void afterNodeInsertion(boolean evict) { }
     void afterNodeRemoval(Node<K,V> p) { }

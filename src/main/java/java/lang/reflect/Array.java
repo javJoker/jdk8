@@ -70,6 +70,13 @@ class Array {
      * @exception NegativeArraySizeException if the specified {@code length}
      * is negative
      */
+    /**
+     * 新数组的维数不得超过255
+     * @param componentType
+     * @param length
+     * @return
+     * @throws NegativeArraySizeException
+     */
     public static Object newInstance(Class<?> componentType, int length)
         throws NegativeArraySizeException {
         return newArray(componentType, length);
@@ -476,7 +483,7 @@ class Array {
     /*
      * Private
      */
-
+    // 本地方法
     private static native Object newArray(Class<?> componentType, int length)
         throws NegativeArraySizeException;
 
