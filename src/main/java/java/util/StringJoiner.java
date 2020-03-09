@@ -62,9 +62,21 @@ package java.util;
  * @see java.util.stream.Collectors#joining(CharSequence, CharSequence, CharSequence)
  * @since  1.8
 */
+/**
+ * 用于构造由定界符分隔的字符序列，并可选地以提供的前缀开头并以提供的后缀结尾。
+ *
+ * JDK8 stream使用这个方法
+ * List<Integer> numbers = Arrays.asList(1, 2, 3, 4);
+ * String commaSeparatedNumbers = numbers.stream()
+ *     .map(i -> i.toString())
+ *     .collect(Collectors.joining(", "));
+ */
 public final class StringJoiner {
+    // 前缀
     private final String prefix;
+    // 分割符
     private final String delimiter;
+    // 后缀
     private final String suffix;
 
     /*
@@ -118,6 +130,7 @@ public final class StringJoiner {
     public StringJoiner(CharSequence delimiter,
                         CharSequence prefix,
                         CharSequence suffix) {
+        // 空指针校验
         Objects.requireNonNull(prefix, "The prefix must not be null");
         Objects.requireNonNull(delimiter, "The delimiter must not be null");
         Objects.requireNonNull(suffix, "The suffix must not be null");
@@ -142,6 +155,10 @@ public final class StringJoiner {
      * @throws NullPointerException when the {@code emptyValue} parameter is
      *         {@code null}
      */
+    /*
+     * 注意，一旦调用了add方法，即使添加的元素对应于空的String，
+     * 也不再将StringJoiner视为空。
+     */
     public StringJoiner setEmptyValue(CharSequence emptyValue) {
         this.emptyValue = Objects.requireNonNull(emptyValue,
             "The empty value must not be null").toString();
@@ -156,6 +173,7 @@ public final class StringJoiner {
      *
      * @return the string representation of this {@code StringJoiner}
      */
+    // 添加元素为空，返回前后缀拼接字符串
     @Override
     public String toString() {
         if (value == null) {
@@ -167,6 +185,7 @@ public final class StringJoiner {
                 int initialLength = value.length();
                 String result = value.append(suffix).toString();
                 // reset value to pre-append initialLength
+                // ？？
                 value.setLength(initialLength);
                 return result;
             }
