@@ -108,14 +108,20 @@ public class Arrays {
      * Checks that {@code fromIndex} and {@code toIndex} are in
      * the range and throws an exception if they aren't.
      */
+    // 参数范围校验
     private static void rangeCheck(int arrayLength, int fromIndex, int toIndex) {
+        // 起始下标大于结束小标时，抛异常
         if (fromIndex > toIndex) {
             throw new IllegalArgumentException(
                     "fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
         }
+
+        // 起始下标不能小于0
         if (fromIndex < 0) {
             throw new ArrayIndexOutOfBoundsException(fromIndex);
         }
+
+        // 结束下标大于数组长度
         if (toIndex > arrayLength) {
             throw new ArrayIndexOutOfBoundsException(toIndex);
         }
@@ -2969,8 +2975,11 @@ public class Arrays {
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
      *         <tt>toIndex &gt; a.length</tt>
      */
+    // 字符填充
     public static void fill(char[] a, int fromIndex, int toIndex, char val) {
+        // 参数范围校验
         rangeCheck(a.length, fromIndex, toIndex);
+        // 填充数组
         for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
@@ -3341,6 +3350,7 @@ public class Arrays {
      */
     public static char[] copyOf(char[] original, int newLength) {
         char[] copy = new char[newLength];
+        // 取original数组长度和newLength最小值
         System.arraycopy(original, 0, copy, 0,
                          Math.min(original.length, newLength));
         return copy;

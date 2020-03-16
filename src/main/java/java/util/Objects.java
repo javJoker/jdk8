@@ -210,6 +210,7 @@ public final class Objects {
      * @return {@code obj} if not {@code null}
      * @throws NullPointerException if {@code obj} is {@code null}
      */
+    // 空校验
     public static <T> T requireNonNull(T obj) {
         if (obj == null)
             throw new NullPointerException();

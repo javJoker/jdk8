@@ -170,6 +170,7 @@ public final class StringBuilder
     /**
      * @throws     IndexOutOfBoundsException {@inheritDoc}
      */
+    // 添加元素
     @Override
     public StringBuilder append(CharSequence s, int start, int end) {
         super.append(s, start, end);

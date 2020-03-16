@@ -48,11 +48,13 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     /**
      * The value is used for character storage.
      */
+    // 用于字符存储。
     char[] value;
 
     /**
      * The count is the number of characters used.
      */
+    // 计数是使用的字符数
     int count;
 
     /**
@@ -118,9 +120,37 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * If {@code minimumCapacity} is non positive due to numeric
      * overflow, this method throws {@code OutOfMemoryError}.
      */
+    // 扩容
     private void ensureCapacityInternal(int minimumCapacity) {
+        // 正数的时候
         // overflow-conscious code
         if (minimumCapacity - value.length > 0) {
+            // 扩容， minimumCapacity 为正数，newCapacity()就不需要校验minimumCapacity为非负数了
+            /*
+             * Arrays.copyOf方法 ：浅拷贝
+             * 为什么这里需要用浅拷贝？
+             * 因为扩容的时候把原来的数据都copy过来了，如果存取是对象的引用的话，
+             * 那么修改原来的对象的属性值时就会发生变化，如果是深拷贝的话copy的是
+             * 属性值而不是对象的引用，我们修改数组上某个对象的属性就不会改变了，
+             * java底层好多调用了copy方法，这就是为什么java的拷贝是浅拷贝了。
+             * 根深蒂固的原因
+             *
+             * 举例如下：
+             * Department[] dept = new Department[2];
+             * dept[0] = d1;
+             * Department[] departments = Arrays.copyOf(dept, dept.length);
+             * System.out.println("======== 改变前 =========");
+             * System.out.println(dept[0].getId());
+             * System.out.println(departments[0].getId());
+             *
+             * System.out.println("======== 改变后 =========");
+             * d1.setId(2);
+             * System.out.println(dept[0].getId());
+             * System.out.println(departments[0].getId());
+             *
+             * 这里浅拷贝和深拷贝结果就不一样了。
+             *
+             */
             value = Arrays.copyOf(value,
                     newCapacity(minimumCapacity));
         }
@@ -131,6 +161,19 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * Some VMs reserve some header words in an array.
      * Attempts to allocate larger arrays may result in
      * OutOfMemoryError: Requested array size exceeds VM limit
+     */
+    /**
+     * 要分配的数组的最大大小（除非必要）。 一些虚拟机在数组中保留一些头信息。
+     * 尝试分配更大的阵列可能会导致 OutOfMemoryError：请求的阵列大小超出VM限制
+     *
+     * 百度：
+     * 数组在java里是一种特殊类型，既不是基本数据类型（开玩笑，当然不是）也不是引用数据类型。
+     * 有别于普通的“类的实例”对象，java里数组不是类，所以也就没有对应的class文件，数组类型是由jvm从元素类型合成出来的；在jvm中获取数组的长度是用arraylength这个专门的字节码指令的；
+     * 在数组的对象头里有一个_length字段，记录数组长度，只需要去读_length字段就可以了。
+     * 所以ArrayList中定义的最大长度为Integer最大值减8，这个8就是就是存了数组_length字段。
+     * 原文链接：https://blog.csdn.net/alexdedream/article/details/84782934
+     *
+     * 具体的对象头内容，可以参考 https://www.2cto.com/kf/201603/494590.html 这篇博客
      */
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
@@ -145,10 +188,25 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @throws OutOfMemoryError if minCapacity is less than zero or
      *         greater than Integer.MAX_VALUE
      */
+    /**
+     * 返回至少等于给定最小容量的容量。 如果足够，则返回增加了相同数量+ 2的当前容量。
+     * 不会返回大于{@code MAX_ARRAY_SIZE} 的容量，除非给定的最小容量大于该容量。
+     *
+     * 机制：
+     * 1. 先在数组原来大小的基础上扩容为原来的2倍加2为newCapacity，如果newCapacity
+     * 大于传过来的参数，就以此进行下一步操作，否则就把传来的参数minCapacity赋值
+     * 给newCapacity。
+     * 2. 判断newCapacity是否小于等于0或者比MAX_ARRAY_SIZE还大，则容量为巨容，否则
+     * 为newCapacity大小
+     */
     private int newCapacity(int minCapacity) {
+        // 在原来的基础上扩容两倍加2
+        // 有溢出意识的代码
         // overflow-conscious code
         int newCapacity = (value.length << 1) + 2;
+        // 扩容容量小于传过来的参数的时候
         if (newCapacity - minCapacity < 0) {
+            // 参数赋值
             newCapacity = minCapacity;
         }
         return (newCapacity <= 0 || MAX_ARRAY_SIZE - newCapacity < 0)
@@ -156,10 +214,13 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
             : newCapacity;
     }
 
+    // 巨容
     private int hugeCapacity(int minCapacity) {
+        // minCapacity大于Integer.MAX_VALUE，抛异常
         if (Integer.MAX_VALUE - minCapacity < 0) { // overflow
             throw new OutOfMemoryError();
         }
+        //
         return (minCapacity > MAX_ARRAY_SIZE)
             ? minCapacity : MAX_ARRAY_SIZE;
     }
@@ -202,15 +263,27 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @throws     IndexOutOfBoundsException  if the
      *               {@code newLength} argument is negative.
      */
+    /**
+     * 1.如果{@code newLength}参数小于当前长度，则该长度将更改为指定的长度。
+     * 2.如果{@code newLength}参数大于或等于当前长度，则附加足够的空字符（{@code '\u005Cu0000'}），
+     * 以便长度成为{@code newLength}参数。
+     *
+     * 注意：{@code newLength}参数必须大于或等于等于 0。
+     */
     public void setLength(int newLength) {
+        // 校验参数为负数的时候抛异常
         if (newLength < 0)
             throw new StringIndexOutOfBoundsException(newLength);
+        // 扩容
         ensureCapacityInternal(newLength);
 
+        // newLength 大于数组元素个数的时候
         if (count < newLength) {
+            // '\0' 为空字符
             Arrays.fill(value, count, newLength, '\0');
         }
 
+        // 如果newLength小于count的时候，只是改变计数器，原来的数组中的元素依然存在
         count = newLength;
     }
 
@@ -445,7 +518,18 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
         if (str == null)
             return appendNull();
         int len = str.length();
+        /*
+         * 扩容 ===》 拷贝到新数组赋值给value
+         * 如果使用的字符数与添加字符串长度之和大于数组定义的长度就进行扩容，
+         * 否则继续使用原来的数组。
+         * 1. 扩容数组大小：
+         * （1）一般情况扩容的大小是原来的数组的2倍加2，
+         * （2）但是count + len之和大于上面的扩容大小，这些结果都小于MAX_ARRAY_SIZE
+         * （3）大于MAX_ARRAY_SIZE，就为巨容
+         *
+         */
         ensureCapacityInternal(count + len);
+        // append操作
         str.getChars(0, len, value, count);
         count += len;
         return this;
@@ -466,28 +550,39 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @since 1.8
      */
     AbstractStringBuilder append(AbstractStringBuilder asb) {
+        // asb为null，添加null字符串
         if (asb == null)
             return appendNull();
         int len = asb.length();
+        // 扩容
         ensureCapacityInternal(count + len);
+        // append操作
         asb.getChars(0, len, value, count);
+        // 计数
         count += len;
         return this;
     }
 
     // Documentation in subclasses because of synchro difference
+    // 这里重写了Appendable的类
     @Override
     public AbstractStringBuilder append(CharSequence s) {
+        // s为null的时候，添加null字符串
         if (s == null)
             return appendNull();
+        // String类型时
         if (s instanceof String)
             return this.append((String)s);
+        // AbstractStringBuilder类型时，其子类就两个：
+        // StringBuffer和StringBuilder
         if (s instanceof AbstractStringBuilder)
             return this.append((AbstractStringBuilder)s);
 
+        // 继承CharSequence接口，除了上面类型的其他类型操作
         return this.append(s, 0, s.length());
     }
 
+    // 添加null类型
     private AbstractStringBuilder appendNull() {
         int c = count;
         ensureCapacityInternal(c + 4);
@@ -531,14 +626,18 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      */
     @Override
     public AbstractStringBuilder append(CharSequence s, int start, int end) {
+        // s为null，添加null字符串
         if (s == null)
             s = "null";
+        // 下标校验
         if ((start < 0) || (start > end) || (end > s.length()))
             throw new IndexOutOfBoundsException(
                 "start " + start + ", end " + end + ", s.length() "
                 + s.length());
         int len = end - start;
+        // 扩容
         ensureCapacityInternal(count + len);
+        // 字符遍历添加
         for (int i = start, j = count; i < end; i++, j++)
             value[j] = s.charAt(i);
         count += len;

@@ -85,6 +85,8 @@ public final class StringJoiner {
      * suffix, so that we can more easily add elements without having to jigger
      * the suffix each time.
      */
+    //StringBuilder值-在任何时候，字符都是由前缀构成的，添加的元素由定界符分隔，
+    // 但没有后缀，因此我们可以更轻松地添加元素，而不必每次都摇晃*后缀。
     private StringBuilder value;
 
     /*
@@ -93,6 +95,8 @@ public final class StringJoiner {
      * i.e. when it is empty.  This may be overridden by the user to be some
      * other value including the empty String.
      */
+    // 默认情况下，当尚未添加任何元素（即，如果为空）时，由toString（）返回的
+    // 由前缀+后缀组成的字符串或value的属性。用户可能会将其覆盖为其他值，包括空String。
     private String emptyValue;
 
     /**
@@ -176,16 +180,18 @@ public final class StringJoiner {
     // 添加元素为空，返回前后缀拼接字符串
     @Override
     public String toString() {
+        // 添加元素为空，返回前后缀拼接字符串
         if (value == null) {
             return emptyValue;
         } else {
+            // 判断后缀是否为空
             if (suffix.equals("")) {
                 return value.toString();
             } else {
                 int initialLength = value.length();
                 String result = value.append(suffix).toString();
                 // reset value to pre-append initialLength
-                // ？？
+                // 重置值以预先添加initialLength, 为了后面继续操作
                 value.setLength(initialLength);
                 return result;
             }
@@ -199,6 +205,11 @@ public final class StringJoiner {
      *
      * @param  newElement The element to add
      * @return a reference to this {@code StringJoiner}
+     */
+    /**
+     * 注意：
+     * 1.参数类型是CharSequence接口，String、StringBuilder、StringBuffer等继承了这个接口
+     * 2.传过来的参数为null的时候，它不会做空校验，它会把null转化成字符串添加进去
      */
     public StringJoiner add(CharSequence newElement) {
         prepareBuilder().append(newElement);
@@ -231,16 +242,24 @@ public final class StringJoiner {
             // lock the length so that we can seize the data to be appended
             // before initiate copying to avoid interference, especially when
             // merge 'this'
+            /*
+             * 因为这里返回值是一个引用，这个对象value的引用，
+             * 所以这里改变了也就改变了当前value的值
+             */
             StringBuilder builder = prepareBuilder();
             builder.append(other.value, other.prefix.length(), length);
         }
         return this;
     }
 
+    // 初始化StringBuilder
     private StringBuilder prepareBuilder() {
+        // value不为null
         if (value != null) {
             value.append(delimiter);
-        } else {
+        }
+        // value为null，先new一个StringBuilder()
+        else {
             value = new StringBuilder().append(prefix);
         }
         return value;
@@ -256,6 +275,7 @@ public final class StringJoiner {
      *
      * @return the length of the current value of {@code StringJoiner}
      */
+    // 返回value的长度
     public int length() {
         // Remember that we never actually append the suffix unless we return
         // the full (present) value or some sub-string or length of it, so that
